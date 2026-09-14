@@ -349,6 +349,7 @@
     }
 
     /* Lớp chữ của tiên cảnh */
+    /* Lớp chữ không nhận chuột, riêng .btn bật lại để bấm được */
     #fairy-text { position: fixed; inset: 0; z-index: 25; pointer-events: none; }
 
     .fairy-title {
@@ -504,6 +505,193 @@
       animation: shimmer 2.6s linear infinite;
     }
 
+    /* ----- Hai nút lựa chọn ----- */
+    .confess-buttons {
+      display: flex;
+      gap: 14px;
+      justify-content: center;
+      align-items: center;
+      margin-top: 22px;
+      flex-wrap: wrap;
+    }
+    .btn {
+      pointer-events: auto;          /* #fairy-text tắt chuột, nút phải bật lại */
+      border: 0;
+      border-radius: 999px;
+      padding: 13px 30px;
+      font-family: inherit;
+      font-size: clamp(16px, 4.4vw, 21px);
+      font-weight: 800;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: transform .25s cubic-bezier(.2,1.6,.4,1), box-shadow .25s ease;
+    }
+    .btn-yes {
+      background: linear-gradient(135deg, #ff5fa2, #ff3d8f);
+      color: #fff;
+      box-shadow: 0 8px 24px rgba(255, 60, 150, .5);
+      animation: yesPulse 1.4s ease-in-out infinite;
+    }
+    .btn-yes:active { transform: scale(.94); }
+    @keyframes yesPulse {
+      0%, 100% { box-shadow: 0 8px 24px rgba(255, 60, 150, .5), 0 0 0 0 rgba(255, 95, 162, .55); }
+      70%      { box-shadow: 0 8px 24px rgba(255, 60, 150, .5), 0 0 0 18px rgba(255, 95, 162, 0); }
+    }
+    .btn-no {
+      background: rgba(255, 255, 255, .9);
+      color: #b0729a;
+      box-shadow: 0 4px 14px rgba(180, 120, 160, .3), inset 0 0 0 2px rgba(255, 150, 200, .5);
+    }
+    /* Khi bắt đầu chạy trốn thì thoát khỏi dòng chảy, bay tự do khắp màn */
+    .btn-no.runaway {
+      position: fixed;
+      margin: 0;
+      z-index: 40;
+      transition: left .32s cubic-bezier(.34,1.6,.5,1),
+                  top  .32s cubic-bezier(.34,1.6,.5,1),
+                  transform .32s ease, opacity .3s ease;
+    }
+
+    /* =====================================================
+       LOVE — bấm Đồng ý rồi. Bản nâng cấp của tiên cảnh.
+       ===================================================== */
+    body.love .fairy-glow {
+      background:
+        radial-gradient(circle at 50% 40%, rgba(255,255,255,.75) 0%, transparent 42%),
+        linear-gradient(120deg, #ff5fa2, #ffa14a, #ffe14a, #6ee7a0, #5ec8ff, #b06bff, #ff5fa2);
+      background-size: 100% 100%, 400% 400%;
+      animation: auroraShift 9s ease-in-out infinite, glowPulse 1.8s ease-in-out infinite;
+    }
+    @keyframes auroraShift {
+      0%, 100% { background-position: 0% 50%, 0% 50%; }
+      50%      { background-position: 0% 50%, 100% 50%; }
+    }
+    body.love .fairy-rays { animation-duration: 11s; opacity: 1; }
+    body.love #fairy-vignette { background: radial-gradient(ellipse at center, transparent 42%, rgba(190, 40, 140, .5) 100%); }
+    body.love canvas {
+      filter: drop-shadow(0 0 50px rgba(255,255,255,.95)) drop-shadow(0 0 90px rgba(255,80,180,1));
+      animation: catCheer .5s cubic-bezier(.36,.07,.19,.97) 6, breathe 4.5s ease-in-out 3s infinite;
+    }
+    @keyframes catCheer {
+      0%, 100% { transform: translateY(0)     rotate(0deg)   scale(1); }
+      25%      { transform: translateY(-22px) rotate(-7deg)  scale(1.06); }
+      75%      { transform: translateY(-14px) rotate(7deg)   scale(1.04); }
+    }
+
+    /* Lớp riêng cho pháo hoa + kim tuyến, khỏi đụng trần hạt của #fx */
+    #love-fx { position: fixed; inset: 0; z-index: 22; pointer-events: none; overflow: hidden; }
+
+    /* Vòng sáng lan ra khi pháo hoa nổ */
+    .fw-ring {
+      position: absolute;
+      width: 12px; height: 12px;
+      margin: -6px 0 0 -6px;
+      border-radius: 50%;
+      border: 3px solid rgba(255, 255, 255, .95);
+      animation: ringOut .85s ease-out forwards;
+    }
+    @keyframes ringOut {
+      0%   { transform: scale(1);  opacity: 1; }
+      100% { transform: scale(26); opacity: 0; }
+    }
+    /* Mảnh pháo hoa bay theo cung rồi rơi xuống */
+    .fw-bit {
+      position: absolute;
+      animation: fwFly 1.5s cubic-bezier(.12,.75,.35,1) forwards;
+    }
+    @keyframes fwFly {
+      0%   { transform: translate(-50%, -50%) scale(.3); opacity: 1; }
+      70%  { opacity: 1; }
+      100% { transform: translate(calc(-50% + var(--dx)), calc(-50% + var(--dy) + 90px)) scale(1.1) rotate(var(--rot)); opacity: 0; }
+    }
+    /* Kim tuyến giấy rơi, lắc qua lắc lại */
+    .confetti {
+      position: absolute;
+      top: -30px;
+      width: 9px; height: 15px;
+      border-radius: 2px;
+      animation: confFall var(--dur) linear forwards;
+    }
+    @keyframes confFall {
+      0%   { transform: translate(0, 0) rotate(0deg)   scale(1); opacity: 0; }
+      8%   { opacity: 1; }
+      100% { transform: translate(var(--sway), 112vh) rotate(900deg) scale(.8); opacity: .2; }
+    }
+
+    /* Trái tim khổng lồ phóng ra giữa màn */
+    .love-heart {
+      position: absolute;
+      left: 0; right: 0; top: 30%;
+      margin-inline: auto;
+      width: max-content;
+      font-size: clamp(120px, 40vw, 300px);
+      line-height: 1;
+      filter: drop-shadow(0 0 50px rgba(255, 255, 255, .95));
+      animation: loveHeartIn 1s cubic-bezier(.2,1.6,.4,1) forwards, heartbeat 1s ease-in-out .9s infinite;
+    }
+    .love-heart.out { animation: loveHeartOut .8s ease-in forwards; }
+    @keyframes loveHeartIn {
+      from { opacity: 0; transform: scale(0) rotate(-40deg); }
+      to   { opacity: 1; transform: scale(1) rotate(0deg); }
+    }
+    @keyframes loveHeartOut {
+      to { opacity: 0; transform: scale(2.6); filter: blur(22px); }
+    }
+
+    /* Chữ lớn của màn LOVE */
+    .love-title {
+      position: absolute;
+      left: 0; right: 0; top: 38%;
+      margin-inline: auto;
+      width: max-content; max-width: 94vw;
+      text-align: center;
+      font-size: clamp(34px, 10vw, 78px);
+      font-weight: 800;
+      line-height: 1.14;
+      color: #fff;
+      text-shadow: 0 0 18px rgba(255, 60, 150, .95),
+                   0 0 42px rgba(255, 120, 190, .85),
+                   0 6px 0 rgba(210, 40, 130, .55);
+      animation: loveTitleIn 1s cubic-bezier(.2,1.5,.4,1) forwards, loveTitleFloat 2.4s ease-in-out 1s infinite;
+    }
+    .love-title.out { animation: titleOut .8s ease-in forwards; }
+    @keyframes loveTitleIn {
+      from { opacity: 0; transform: translateY(50px) scale(.5); letter-spacing: 14px; filter: blur(12px); }
+      to   { opacity: 1; transform: translateY(0)    scale(1);  letter-spacing: 1px;  filter: blur(0); }
+    }
+    @keyframes loveTitleFloat {
+      0%, 100% { transform: translateY(0)    rotate(-1deg); }
+      50%      { transform: translateY(-12px) rotate(1deg); }
+    }
+
+    /* Dải băng chữ chạy ngang dưới đáy */
+    .love-banner {
+      position: absolute;
+      left: 0; right: 0;
+      bottom: calc(26px + env(safe-area-inset-bottom, 0px));
+      overflow: hidden;
+      padding: 11px 0;
+      background: rgba(255, 255, 255, .82);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      box-shadow: 0 0 30px rgba(255, 60, 150, .45);
+      opacity: 0;
+      animation: fadeIn .8s ease forwards;
+    }
+    @keyframes fadeIn { to { opacity: 1; } }
+    .love-banner div {
+      display: inline-block;
+      white-space: nowrap;
+      font-size: clamp(15px, 4vw, 20px);
+      font-weight: 800;
+      color: #d02a7c;
+      animation: marquee 14s linear infinite;
+    }
+    @keyframes marquee {
+      from { transform: translateX(0); }
+      to   { transform: translateX(-50%); }
+    }
+
     /* ===== Màn hình chờ ===== */
     #loader {
       position: fixed; inset: 0;
@@ -576,6 +764,7 @@
 <div id="counter">🐾 0</div>
 
 <!-- Tiên cảnh: chữ nằm trên cùng -->
+<div id="love-fx"></div>
 <div id="fairy-text"></div>
 <div id="flash"></div>
 
@@ -614,7 +803,7 @@ const RISING = ['💖', '💕', '⭐', '✨', '💗', '🌟', '💞', '🫧', '�
 const PETALS = ['🌸', '🌸', '🌼', '🍥', '💮', '🌷', '🌺', '🍀', '❄️', '☁️', '🎀'];
 const SPARKS = ['✨', '⭐', '💫', '🐾', '💗', '🌟'];
 const BURSTS = ['💖', '💕', '✨', '⭐', '💗', '🐾', '🐱', '🐟', '🥛', '🍬', '🎀', '🌈'];
-const FAIRY_RAIN = ['🌸', '🌸', '🌸', '🌺', '💮', '✨', '🌟', '💗', '🩷', '🍓', '💫', '🦄', '🌈', '🧚', '☄️', '🫧', '🍡'];
+const FAIRY_RAIN = ['🌸', '🌸', '🌸', '🌺', '💮', '✨', '🌟', '💗', '🩷', '💫', '🦄', '🌈', '🧚', '☄️', '🫧', '🍡'];
 
 const QUOTES = [
   'Meow~ 😽',
@@ -674,10 +863,27 @@ const CONFESSION = {
   at        : 100,
   lead      : 'Thảo Nguyên ơi...',      // dòng nhỏ phía trên, xoá nếu không muốn
   text      : 'Làm ny anh nha :3',
-  farewell  : 'Nhớ trả lời anh nha 🥺💗',
   introHold : 1900,    // ms — 💌 đứng bao lâu trước khi hiện thẻ
-  duration  : 30000,   // ms — thẻ tỏ tình đứng bao lâu
+  yesLabel  : 'Đồng ý 💗',
+  // Nút "Không" mỗi lần bị rượt lại đổi chữ, càng về sau càng nì nèo
+  noLabels  : ['Không 🙈', 'Không đâu 😳', 'Suy nghĩ lại đi 🥺', 'Đừng mà 😭',
+               'Tui buồn đó 💔', 'Nữa hả 😿', 'Bấm hoài không trúng đâu 😼',
+               'Thôi mà~ 🙏', 'Chọn Đồng ý đi 💗', 'Hết đường rồi nha 😽'],
 };
+
+/* Màn LOVE — sau khi bấm Đồng ý */
+const LOVE = {
+  title      : 'Yayyy!! 💗',
+  sub        : 'Từ nay Thảo Nguyên\nlà ny của anh rồi nha 🥰',
+  banner     : '💗 Thảo Nguyên 💕 iu anh nhiều nha 💗 mãi mãi bên nhau 💞 ',
+  fwEvery    : 620,   // ms — nhịp pháo hoa
+  confEvery  : 70,    // ms — nhịp kim tuyến
+  rainEvery  : 55,    // ms — nhịp mưa tim
+  maxFx      : 190,   // trần hạt của lớp #love-fx
+};
+const LOVE_RAIN   = ['💗', '💖', '💕', '💞', '🩷', '❤️', '💘', '🌹', '✨', '🌈', '🦄', '🎉', '🥰', '💐'];
+const FW_BITS     = ['💗', '💖', '💕', '✨', '⭐', '🌟', '💫', '🩷', '🎉', '🎊'];
+const CONF_COLORS = ['#ff5fa2', '#ffd24a', '#5ec8ff', '#7ee89a', '#b06bff', '#ff8f5f', '#fff'];
 const CONFESS_RAIN = ['💗', '💖', '💕', '💞', '🩷', '❤️', '💘', '🌹', '✨', '💗', '💍', '🍫', '🧸', '💐', '🥰', '💌'];
 
 /* ========================= Trạng thái ========================= */
@@ -688,6 +894,7 @@ const hintEl    = document.getElementById('hint');
 const counterEl = document.getElementById('counter');
 const fairyEl   = document.getElementById('fairy');
 const fairyText = document.getElementById('fairy-text');
+const loveFx    = document.getElementById('love-fx');
 const flashEl   = document.getElementById('flash');
 
 let tapCount    = 0;
@@ -703,6 +910,9 @@ let fairyTimers = { rain: null, line: null, end: null };
 let currentThinh = null;
 let fairyMode    = 'thinh';   // 'thinh' | 'confess'
 let confessCard  = null;
+let confessDone  = false;     // tỏ tình chỉ chạy đúng 1 lần
+let noDodges     = 0;         // nút "Không" đã né bao nhiêu lần
+let loveTimers   = { fw: null, conf: null, rain: null };
 
 const rand      = (min, max) => Math.random() * (max - min) + min;
 const pick      = arr => arr[Math.floor(Math.random() * arr.length)];
@@ -923,9 +1133,30 @@ function showConfessCard() {
   heart.textContent = '💗';
   lead.textContent  = CONFESSION.lead;
   text.textContent  = CONFESSION.text;
+  // Hai lựa chọn
+  const btns = document.createElement('div');
+  const yes  = document.createElement('button');
+  const no   = document.createElement('button');
+  btns.className = 'confess-buttons';
+  yes.className  = 'btn btn-yes';
+  no.className   = 'btn btn-no';
+  yes.type = no.type = 'button';
+  yes.textContent = CONFESSION.yesLabel;
+  no.textContent  = CONFESSION.noLabels[0];
+
+  yes.addEventListener('click', acceptLove);
+
+  // Nút "Không" chạy trốn: né cả khi rê chuột lẫn khi vừa chạm xuống,
+  // pointerdown chạy TRƯỚC click nên không bao giờ bấm trúng.
+  no.addEventListener('pointerenter', () => dodgeNo(no, yes));
+  no.addEventListener('pointerdown', e => { e.preventDefault(); dodgeNo(no, yes); });
+  no.addEventListener('click', e => e.preventDefault());
+
+  btns.append(yes, no);
   card.append(heart);
   if (CONFESSION.lead) card.append(lead);
   card.append(text);
+  card.append(btns);
   wrap.append(card);
   fairyText.appendChild(wrap);
   confessCard = wrap;
@@ -933,6 +1164,175 @@ function showConfessCard() {
   // Mưa tim ăn mừng đúng lúc thẻ bật ra
   spawnBurst(window.innerWidth / 2, window.innerHeight / 2, CONFIG.isSmallScreen ? 24 : 40);
   for (let i = 0; i < 20; i++) setTimeout(spawnRising, i * 60);
+}
+
+/** Nút "Không" nhảy sang chỗ khác, nút "Đồng ý" thì to dần lên. */
+function dodgeNo(no, yes) {
+  noDodges++;
+
+  const w = no.offsetWidth  || 130;
+  const h = no.offsetHeight || 48;
+  const pad = 12;
+  const maxX = Math.max(pad, window.innerWidth  - w - pad);
+  const maxY = Math.max(pad, window.innerHeight - h - pad);
+
+  // Lần đầu: chốt đúng vị trí hiện tại rồi mới đổi sang fixed, tránh giật
+  if (!no.classList.contains('runaway')) {
+    const r = no.getBoundingClientRect();
+    no.style.left = `${r.left}px`;
+    no.style.top  = `${r.top}px`;
+    no.classList.add('runaway');
+    void no.offsetWidth;
+  }
+
+  // Chọn điểm mới, phải cách chỗ cũ đủ xa để không bị bấm trúng do quán tính
+  const cur = no.getBoundingClientRect();
+  let x = 0, y = 0;
+  for (let i = 0; i < 24; i++) {
+    x = rand(pad, maxX);
+    y = rand(pad, maxY);
+    if (Math.hypot(x - cur.left, y - cur.top) > Math.min(190, maxX * .55)) break;
+  }
+  no.style.left = `${x}px`;
+  no.style.top  = `${y}px`;
+
+  // Càng né càng bé lại, chữ càng nì nèo; nút Đồng ý thì phình to
+  const shrink = Math.max(.55, 1 - noDodges * .05);
+  no.style.transform  = `scale(${shrink}) rotate(${rand(-14, 14)}deg)`;
+  no.textContent      = CONFESSION.noLabels[Math.min(noDodges, CONFESSION.noLabels.length - 1)];
+  yes.style.transform = `scale(${Math.min(1.45, 1 + noDodges * .055)})`;
+
+  // Rắc ít tim ở chỗ nó vừa bỏ chạy cho vui mắt
+  spawnBurst(cur.left + w / 2, cur.top + h / 2, 5);
+}
+
+/* ---------- Hiệu ứng riêng của màn LOVE ---------- */
+
+/** Gắn hạt vào #love-fx, có trần riêng để không tranh chỗ với #fx. */
+function spawnLove(el, lifetimeMs) {
+  if (loveFx.childElementCount > LOVE.maxFx) return;
+  loveFx.appendChild(el);
+  setTimeout(() => el.remove(), lifetimeMs);
+}
+
+/** Một quả pháo hoa: vòng sáng lan ra + mảnh vụn bay theo cung. */
+function spawnFirework(px, py) {
+  if (document.hidden) return;
+  const x = px !== undefined ? px : rand(window.innerWidth  * .12, window.innerWidth  * .88);
+  const y = py !== undefined ? py : rand(window.innerHeight * .12, window.innerHeight * .55);
+
+  const ring = document.createElement('div');
+  ring.className = 'fw-ring';
+  ring.style.left = `${x}px`;
+  ring.style.top  = `${y}px`;
+  spawnLove(ring, 900);
+
+  const n = CONFIG.isSmallScreen ? 12 : 18;
+  for (let i = 0; i < n; i++) {
+    const angle = (Math.PI * 2 * i) / n + rand(-.18, .18);
+    const dist  = rand(90, 210);
+    const bit   = document.createElement('div');
+    bit.className   = 'fw-bit';
+    bit.textContent = pick(FW_BITS);
+    bit.style.left     = `${x}px`;
+    bit.style.top      = `${y}px`;
+    bit.style.fontSize = `${rand(16, 34)}px`;
+    bit.style.setProperty('--dx',  `${Math.cos(angle) * dist}px`);
+    bit.style.setProperty('--dy',  `${Math.sin(angle) * dist}px`);
+    bit.style.setProperty('--rot', `${rand(-240, 240)}deg`);
+    spawnLove(bit, 1550);
+  }
+}
+
+/** Một mảnh kim tuyến rơi xuống. */
+function spawnConfetti() {
+  if (document.hidden) return;
+  const el  = document.createElement('div');
+  const dur = rand(3.2, 6);
+  el.className = 'confetti';
+  el.style.left       = `${rand(0, 100)}vw`;
+  el.style.background = pick(CONF_COLORS);
+  el.style.width      = `${rand(6, 12)}px`;
+  el.style.height     = `${rand(11, 20)}px`;
+  if (Math.random() < .3) el.style.borderRadius = '50%';
+  el.style.setProperty('--sway', `${rand(-200, 200)}px`);
+  el.style.setProperty('--dur', `${dur}s`);
+  spawnLove(el, dur * 1000);
+}
+
+/** Mưa tim dày đặc của màn LOVE. */
+function spawnLoveRain() {
+  if (document.hidden) return;
+  const el  = document.createElement('div');
+  const dur = rand(3.2, 6);
+  el.className   = 'petal';
+  el.textContent = pick(LOVE_RAIN);
+  el.style.left     = `${rand(0, 100)}vw`;
+  el.style.fontSize = `${rand(20, 42)}px`;
+  el.style.setProperty('--sway', `${rand(-180, 180)}px`);
+  el.style.setProperty('--dur', `${dur}s`);
+  spawnLove(el, dur * 1000);
+}
+
+/** Bấm Đồng ý → màn LOVE, chạy mãi tới khi tải lại trang. */
+function acceptLove() {
+  if (fairyMode === 'love') return;
+  fairyMode = 'love';
+
+  // Dọn thẻ tỏ tình: nổ tung thành tim
+  if (confessCard) {
+    const wrap = confessCard;
+    const card = wrap.querySelector('.confess-card');
+    const r    = card.getBoundingClientRect();
+    spawnBurst(r.left + r.width / 2, r.top + r.height / 2, CONFIG.isSmallScreen ? 26 : 44);
+    card.classList.add('out');
+    setTimeout(() => wrap.remove(), 850);
+    confessCard = null;
+  }
+  fairyText.querySelectorAll('.confess-intro').forEach(el => el.remove());
+  if (currentThinh) { currentThinh.remove(); currentThinh = null; }
+
+  flash();
+  clearInterval(fairyTimers.rain);
+  document.body.classList.remove('confess');
+  document.body.classList.add('love');
+  counterEl.classList.remove('show');
+
+  // Ba nhịp hiệu ứng chạy song song, không bao giờ tắt
+  loveTimers.fw   = setInterval(spawnFirework, LOVE.fwEvery);
+  loveTimers.conf = setInterval(spawnConfetti, CONFIG.isSmallScreen ? LOVE.confEvery * 1.5 : LOVE.confEvery);
+  loveTimers.rain = setInterval(spawnLoveRain, CONFIG.isSmallScreen ? LOVE.rainEvery * 1.6 : LOVE.rainEvery);
+
+  // Loạt pháo hoa mở màn
+  for (let i = 0; i < 6; i++) setTimeout(() => spawnFirework(), i * 230);
+
+  // Tim khổng lồ → chữ lớn → lời nhắn → dải băng
+  const heart = document.createElement('div');
+  heart.className   = 'love-heart';
+  heart.textContent = '💗';
+  setTimeout(() => fairyText.appendChild(heart), 500);
+  setTimeout(() => heart.classList.add('out'), 2900);
+  setTimeout(() => heart.remove(), 3800);
+
+  setTimeout(() => {
+    const t = document.createElement('div');
+    t.className   = 'love-title';
+    t.textContent = LOVE.title;
+    fairyText.appendChild(t);
+    setTimeout(() => t.classList.add('out'), 3000);
+    setTimeout(() => t.remove(), 3900);
+  }, 3300);
+
+  setTimeout(() => showThinh(LOVE.sub), 6900);
+
+  setTimeout(() => {
+    const b = document.createElement('div');
+    const inner = document.createElement('div');
+    b.className = 'love-banner';
+    inner.textContent = LOVE.banner.repeat(6);
+    b.appendChild(inner);
+    fairyText.appendChild(b);
+  }, 7600);
 }
 
 /**
@@ -965,7 +1365,7 @@ function enterFairyland({ mode = 'thinh', firstLine = null } = {}) {
     fairyTimers.rain = setInterval(spawnFairyRain, Math.round(FAIRY.rainEvery * .7));
     setTimeout(showConfessIntro, 300);
     setTimeout(showConfessCard, CONFESSION.introHold + 900);
-    fairyTimers.end = setTimeout(exitFairyland, CONFESSION.duration);
+    // Không hẹn giờ tắt: thẻ đứng đó tới khi bấm Đồng ý
     return;
   }
 
@@ -976,7 +1376,8 @@ function enterFairyland({ mode = 'thinh', firstLine = null } = {}) {
 }
 
 /** Rời tiên cảnh, trả mọi thứ về bình thường. */
-function exitFairyland() {
+function exitFairyland(opts) {
+  const silent = opts && opts.silent;   // cắt ngang, không chào tạm biệt
   clearInterval(fairyTimers.rain);
   clearTimeout(fairyTimers.line);
   clearTimeout(fairyTimers.end);
@@ -989,15 +1390,21 @@ function exitFairyland() {
     confessCard = null;
   }
 
-  showThinh(fairyMode === 'confess' ? CONFESSION.farewell : FAIRY_FAREWELL);
-  setTimeout(() => {
-    if (currentThinh) {
-      const old = currentThinh;
-      old.classList.add('out');
-      setTimeout(() => old.remove(), 650);
-      currentThinh = null;
-    }
-  }, 2800);
+  if (silent) {
+    // Dọn sạch câu thính đang hiện để nhường chỗ cho màn tỏ tình
+    if (currentThinh) { currentThinh.remove(); currentThinh = null; }
+    fairyText.querySelectorAll('.fairy-title').forEach(el => el.remove());
+  } else {
+    showThinh(FAIRY_FAREWELL);   // confess/love không tự thoát nên chỉ còn lối này
+    setTimeout(() => {
+      if (currentThinh) {
+        const old = currentThinh;
+        old.classList.add('out');
+        setTimeout(() => old.remove(), 650);
+        currentThinh = null;
+      }
+    }, 2800);
+  }
 
   fairyEl.classList.remove('show');
   document.body.classList.remove('fairy', 'confess');
@@ -1018,9 +1425,22 @@ function handleTap(event) {
   hideHint();
   resetIdleTimer();
 
+  // Tỏ tình phải xét TRƯỚC tiên cảnh: chạm lúc đang trong tiên cảnh
+  // vẫn cộng tapCount, nếu xét sau thì mốc 100 bị nuốt mất.
+  if (!confessDone && tapCount >= CONFESSION.at) {
+    confessDone = true;
+    if (fairyActive) exitFairyland({ silent: true });   // đang tiên cảnh thì cắt ngang
+    enterFairyland({ mode: 'confess' });
+    return;
+  }
+
   // Đang trong tiên cảnh
   if (fairyActive) {
-    if (fairyMode === 'confess') {
+    if (fairyMode === 'love') {
+      // Đã yêu nhau rồi: chạm đâu pháo hoa nổ đó
+      spawnFirework(x, y);
+      spawnBurst(x, y, CONFIG.isSmallScreen ? 12 : 18);
+    } else if (fairyMode === 'confess') {
       // Màn tỏ tình: chạm chỉ rải thêm tim, thẻ vẫn đứng nguyên
       spawnBurst(x, y, CONFIG.isSmallScreen ? 16 : 26);
       for (let i = 0; i < 6; i++) setTimeout(spawnRising, i * 80);
@@ -1029,12 +1449,6 @@ function handleTap(event) {
       spawnBurst(x, y, CONFIG.isSmallScreen ? 14 : 22);
       nextThinh();
     }
-    return;
-  }
-
-  // Lần chạm thứ 100 → tỏ tình (ưu tiên hơn tiên cảnh thường)
-  if (tapCount === CONFESSION.at) {
-    enterFairyland({ mode: 'confess' });
     return;
   }
 
