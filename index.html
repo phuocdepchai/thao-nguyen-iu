@@ -806,8 +806,8 @@ const CONFIG = {
 
 /* Tiên cảnh */
 const FAIRY = {
-  triggerAt   : 20,     // chạm đủ 20 lần → vào tiên cảnh lần đầu
-  repeatEvery : 40,     // sau đó cứ thêm 40 lần chạm lại vào (60, 100, 140...)
+  triggerAt   : 10,     // chạm đủ 10 lần → vào tiên cảnh (dạo đầu trước khi tỏ tình ở 20)
+  repeatEvery : 40,     // (không còn tới được vì sau 20 là màn LOVE chạy mãi)
   duration    : 19000,  // ms — tiên cảnh kéo dài bao lâu
   titleHold   : 2600,   // ms — chữ "Lạc vào tiên cảnh" đứng bao lâu
   lineEvery   : 3000,   // ms — mỗi câu thả thính cách nhau
@@ -875,9 +875,9 @@ const THINH = [
 const FAIRY_TITLE    = '✧ Lạc vào tiên cảnh ✧';
 const FAIRY_FAREWELL = 'Hết tiên cảnh rồi...\nnhưng tui vẫn ở đây với bạn 🐾';
 
-/* Tỏ tình — lần chạm thứ 100 */
+/* Tỏ tình — lần chạm thứ 20 */
 const CONFESSION = {
-  at        : 100,
+  at        : 20,
   lead      : 'Thảo Nguyên ơi...',      // dòng nhỏ phía trên, xoá nếu không muốn
   text      : 'Làm ny anh nha :3',
   introHold : 1900,    // ms — 💌 đứng bao lâu trước khi hiện thẻ
@@ -1648,7 +1648,7 @@ function loadLive2D() {
 document.addEventListener('DOMContentLoaded', () => {
   loadLive2D();
 
-  // Xem thử màn tỏ tình khỏi phải chạm 100 lần: mở  ...index.html?tap=99
+  // Xem thử nhanh: ...index.html?tap=19 → chạm 1 cái là tỏ tình; ?tap=9 → tiên cảnh
   const preset = parseInt(new URLSearchParams(location.search).get('tap'), 10);
   if (Number.isFinite(preset) && preset > 0) {
     tapCount = preset;
