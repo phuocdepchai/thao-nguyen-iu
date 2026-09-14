@@ -881,9 +881,20 @@ const CONFESSION = {
   introHold : 1900,    // ms — 💌 đứng bao lâu trước khi hiện thẻ
   yesLabel  : 'Đồng ý 💗',
   // Nút "Không" mỗi lần bị rượt lại đổi chữ, càng về sau càng nì nèo
-  noLabels  : ['Không 🙈', 'Không đâu 😳', 'Suy nghĩ lại đi 🥺', 'Đừng mà 😭',
-               'Tui buồn đó 💔', 'Nữa hả 😿', 'Bấm hoài không trúng đâu 😼',
-               'Thôi mà~ 🙏', 'Chọn Đồng ý đi 💗', 'Hết đường rồi nha 😽'],
+  // [0] là chữ ban đầu, từ [1] trở đi là mỗi lần bấm một câu năn nỉ khác
+  noLabels  : ['Không 🙈',
+               'Không đâu 😳',
+               'Suy nghĩ lại đi 🥺',
+               'Đừng mà 😭',
+               'Tui buồn đó 💔',
+               'Nữa hả 😿',
+               'Bấm hoài không trúng đâu 😼',
+               'Thôi mà~ 🙏',
+               'Xin bạn đó 🥹',
+               'Tui khóc thiệt nha 😢',
+               'Chọn Đồng ý đi mà 💗',
+               'Hết đường rồi nha 😽',
+               'Bỏ cuộc đi bạn ơi 😹'],
 };
 
 /* Màn LOVE — sau khi bấm Đồng ý */
@@ -927,6 +938,7 @@ let fairyMode    = 'thinh';   // 'thinh' | 'confess'
 let confessCard  = null;
 let confessDone  = false;     // tỏ tình chỉ chạy đúng 1 lần
 let noDodges     = 0;         // nút "Không" đã né bao nhiêu lần
+let noBtn        = null;      // nút "Không" (bị tách ra body nên phải tự dọn)
 let loveTimers   = { fw: null, conf: null, rain: null };
 
 const rand      = (min, max) => Math.random() * (max - min) + min;
@@ -1167,6 +1179,8 @@ function showConfessCard() {
   no.addEventListener('pointerdown', e => { e.preventDefault(); dodgeNo(no, yes); });
   no.addEventListener('click', e => e.preventDefault());
 
+  noDodges = 0;
+  noBtn    = no;
   btns.append(yes, no);
   card.append(heart);
   if (CONFESSION.lead) card.append(lead);
@@ -1193,40 +1207,46 @@ function nextNoLabel() {
 function dodgeNo(no, yes) {
   noDodges++;
 
-  const w = no.offsetWidth  || 130;
-  const h = no.offsetHeight || 48;
-  const pad = 12;
-  const maxX = Math.max(pad, window.innerWidth  - w - pad);
-  const maxY = Math.max(pad, window.innerHeight - h - pad);
+  const prev = no.getBoundingClientRect();   // chỗ cũ, để rắc tim tiễn nó đi
 
-  // Lần đầu: chốt đúng vị trí hiện tại rồi mới đổi sang fixed, tránh giật
+  // Lần đầu: tách nút ra khỏi thẻ rồi mới cho chạy tự do.
+  // .confess-card giữ transform vĩnh viễn (animation ... forwards), mà
+  // position:fixed nằm trong phần tử CÓ transform sẽ tính toạ độ theo phần tử
+  // đó chứ không theo màn hình → nút bay ra ngoài và biến mất. Đưa ra <body>
+  // (không có transform) thì fixed mới ăn theo màn hình.
   if (!no.classList.contains('runaway')) {
-    const r = no.getBoundingClientRect();
-    no.style.left = `${r.left}px`;
-    no.style.top  = `${r.top}px`;
     no.classList.add('runaway');
+    document.body.appendChild(no);
+    no.style.left = `${prev.left}px`;
+    no.style.top  = `${prev.top}px`;
     void no.offsetWidth;
   }
 
+  // Đổi chữ TRƯỚC rồi mới đo: câu dài ngắn khác nhau nên bề rộng cũng đổi,
+  // đo sau mới kẹp đúng vào trong màn hình.
+  no.textContent = nextNoLabel();
+  const w = no.offsetWidth  || 130;
+  const h = no.offsetHeight || 48;
+  const pad  = 12;
+  const maxX = Math.max(pad, window.innerWidth  - w - pad);
+  const maxY = Math.max(pad, window.innerHeight - h - pad);
+
   // Chọn điểm mới, phải cách chỗ cũ đủ xa để không bị bấm trúng do quán tính
-  const cur = no.getBoundingClientRect();
   let x = 0, y = 0;
   for (let i = 0; i < 24; i++) {
     x = rand(pad, maxX);
     y = rand(pad, maxY);
-    if (Math.hypot(x - cur.left, y - cur.top) > Math.min(190, maxX * .55)) break;
+    if (Math.hypot(x - prev.left, y - prev.top) > Math.min(190, maxX * .55)) break;
   }
   no.style.left = `${x}px`;
   no.style.top  = `${y}px`;
 
-  // Nút Không giữ nguyên cỡ, né hoài không bao giờ biến mất;
-  // chỉ nghiêng ngẫu nhiên và đổi chữ cho vui. Nút Đồng ý thì phình to.
+  // Giữ nguyên cỡ, né hoài không biến mất; chỉ nghiêng cho vui.
   no.style.transform  = `rotate(${rand(-14, 14)}deg)`;
-  no.textContent      = nextNoLabel();
   yes.style.transform = `scale(${Math.min(1.45, 1 + noDodges * .055)})`;
 
-  // Rắc ít tim ở chỗ nó vừa bỏ chạy cho vui mắt
-  spawnBurst(cur.left + w / 2, cur.top + h / 2, 5);
+  // Rắc ít tim ở chỗ nó vừa bỏ chạy
+  spawnBurst(prev.left + prev.width / 2, prev.top + prev.height / 2, 5);
 }
 
 /* ---------- Hiệu ứng riêng của màn LOVE ---------- */
@@ -1313,6 +1333,7 @@ function acceptLove() {
     confessCard = null;
   }
   fairyText.querySelectorAll('.confess-intro').forEach(el => el.remove());
+  if (noBtn) { noBtn.remove(); noBtn = null; }   // nút Không đã tách ra body
   if (currentThinh) { currentThinh.remove(); currentThinh = null; }
 
   flash();
