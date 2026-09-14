@@ -547,6 +547,8 @@
       color: #b0729a;
       box-shadow: 0 4px 14px rgba(180, 120, 160, .3), inset 0 0 0 2px rgba(255, 150, 200, .5);
     }
+    /* Bóng giữ chỗ cho nút Không sau khi nó bỏ chạy — vô hình, không nhận chuột */
+    .btn-ghost { display: inline-block; visibility: hidden; pointer-events: none; }
     /* Khi bắt đầu chạy trốn thì thoát khỏi dòng chảy, bay tự do khắp màn */
     .btn-no.runaway {
       position: fixed;
@@ -1171,12 +1173,30 @@ function showConfessCard() {
   yes.textContent = CONFESSION.yesLabel;
   no.textContent  = CONFESSION.noLabels[0];
 
-  yes.addEventListener('click', acceptLove);
+  // Chống "click ma": khi bấm Không, nút bay đi lúc ngón tay vừa đặt xuống;
+  // lúc nhấc lên trình duyệt hit-test lại chỗ đó để sinh click → nếu Đồng ý
+  // đang nằm đó thì bị nhận nhầm. Vậy Đồng ý chỉ ăn click khi CHÍNH NÓ đã
+  // nhận pointerdown ngay trước đó.
+  let yesArmed = false;
+  yes.addEventListener('pointerdown', () => {
+    yesArmed = true;
+    setTimeout(() => { yesArmed = false; }, 800);
+  });
+  yes.addEventListener('click', e => {
+    if (!yesArmed) { e.preventDefault(); return; }
+    yesArmed = false;
+    acceptLove();
+  });
 
-  // Nút "Không" chạy trốn: né cả khi rê chuột lẫn khi vừa chạm xuống,
-  // pointerdown chạy TRƯỚC click nên không bao giờ bấm trúng.
-  no.addEventListener('pointerenter', () => dodgeNo(no, yes));
+  // Nút "Không" chạy trốn.
+  //  - pointerenter: chỉ cho chuột (touch cũng bắn pointerenter ngay trước
+  //    pointerdown → nếu không lọc sẽ né 2 lần / 1 chạm, đốt mất 1 câu).
+  //  - pointerdown: chạy trước click nên không bao giờ bấm trúng.
+  //  - touchend preventDefault: chặn luôn việc sinh click từ chạm, hết click ma.
+  no.addEventListener('pointerenter', e => { if (e.pointerType === 'mouse') dodgeNo(no, yes); });
   no.addEventListener('pointerdown', e => { e.preventDefault(); dodgeNo(no, yes); });
+  no.addEventListener('touchstart', e => e.preventDefault(), { passive: false });
+  no.addEventListener('touchend',   e => e.preventDefault(), { passive: false });
   no.addEventListener('click', e => e.preventDefault());
 
   noDodges = 0;
@@ -1215,6 +1235,14 @@ function dodgeNo(no, yes) {
   // đó chứ không theo màn hình → nút bay ra ngoài và biến mất. Đưa ra <body>
   // (không có transform) thì fixed mới ăn theo màn hình.
   if (!no.classList.contains('runaway')) {
+    // Để lại một "bóng" cùng kích cỡ trong hàng nút: layout không đổi,
+    // nút Đồng ý đứng yên chứ không trượt vào chỗ ngón tay đang đặt.
+    const ghost = document.createElement('span');
+    ghost.className = 'btn-ghost';
+    ghost.style.width  = `${prev.width}px`;
+    ghost.style.height = `${prev.height}px`;
+    no.parentNode.insertBefore(ghost, no);
+
     no.classList.add('runaway');
     document.body.appendChild(no);
     no.style.left = `${prev.left}px`;
