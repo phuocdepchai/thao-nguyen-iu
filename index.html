@@ -1,21 +1,71 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="vi">
 <head>
   <meta charset="UTF-8" />
-  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
-  <meta http-equiv="Pragma" content="no-cache" />
-  <meta http-equiv="Expires" content="0" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Cam Tu Cute</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
+  <meta name="theme-color" content="#ffd6e8" />
+  <title>Cam Tú Cute 💗</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700;800&display=swap" rel="stylesheet">
+
+  <!-- Favicon mèo, khỏi phải thêm file -->
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%90%B1%3C/text%3E%3C/svg%3E">
+
   <style>
+    /* ===== Bảng màu pastel dùng chung ===== */
+    :root {
+      --pink:      #ff8fc0;
+      --pink-deep: #ff5fa2;
+      --lilac:     #c9b6ff;
+      --sky:       #a8e6ff;
+      --cream:     #fff4f9;
+      --ink:       #7a3b5c;
+    }
+
+    * { box-sizing: border-box; }
+
     html, body {
       margin: 0;
       padding: 0;
       height: 100%;
       overflow: hidden;
-      font-family: 'Segoe UI', sans-serif;
-      background: linear-gradient(135deg, #ffe6f0, #ccf2ff);
+      font-family: 'Baloo 2', 'Segoe UI', system-ui, sans-serif;
+      background: linear-gradient(135deg, #ffe6f0, #ffeaf7 35%, #e8dcff 65%, #ccf2ff);
+      background-size: 400% 400%;
+      animation: gradientDrift 22s ease-in-out infinite;
+      /* Con trỏ hình bàn chân mèo */
+      cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='32' viewBox='0 0 32 32'%3E%3Cg fill='%23ff8fc0'%3E%3Cellipse cx='16' cy='21' rx='7.5' ry='6.2'/%3E%3Ccircle cx='7.5' cy='13' r='3.3'/%3E%3Ccircle cx='13' cy='8.5' r='3.3'/%3E%3Ccircle cx='19' cy='8.5' r='3.3'/%3E%3Ccircle cx='24.5' cy='13' r='3.3'/%3E%3C/g%3E%3C/svg%3E") 16 16, auto;
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
     }
+
+    @keyframes gradientDrift {
+      0%, 100% { background-position: 0% 50%; }
+      50%      { background-position: 100% 50%; }
+    }
+
+    /* ===== Lớp bóng mờ trôi phía sau, tạo chiều sâu ===== */
+    .blobs { position: fixed; inset: 0; z-index: 0; overflow: hidden; pointer-events: none; }
+    .blobs span {
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(60px);
+      opacity: .55;
+      animation: blobDrift 26s ease-in-out infinite;
+    }
+    .blobs span:nth-child(1) { width: 46vmin; height: 46vmin; left: -8vmin;  top: 8vmin;   background: var(--pink);  animation-duration: 24s; }
+    .blobs span:nth-child(2) { width: 38vmin; height: 38vmin; right: -6vmin; top: 42vmin;  background: var(--sky);   animation-duration: 30s; animation-delay: -6s; }
+    .blobs span:nth-child(3) { width: 30vmin; height: 30vmin; left: 38vmin;  bottom: -8vmin; background: var(--lilac); animation-duration: 27s; animation-delay: -13s; }
+
+    @keyframes blobDrift {
+      0%, 100% { transform: translate(0, 0) scale(1); }
+      33%      { transform: translate(6vmin, -5vmin) scale(1.12); }
+      66%      { transform: translate(-5vmin, 6vmin) scale(.92); }
+    }
+
+    /* ===== Canvas của Live2D ===== */
     canvas {
       position: absolute;
       top: 0; left: 0;
@@ -23,144 +73,527 @@
       height: 100% !important;
       object-fit: contain;
       pointer-events: none;
+      z-index: 2;
+      /* Mèo thở nhè nhẹ cho có sức sống */
+      animation: breathe 4.5s ease-in-out infinite;
     }
-    #touch-overlay {
-      position: fixed;
-      top: 0; left: 0;
-      width: 100%;
-      height: 100%;
-      z-index: 10;
+    @keyframes breathe {
+      0%, 100% { transform: translateY(0)     scale(1); }
+      50%      { transform: translateY(-6px)  scale(1.012); }
     }
-    .bubble {
+
+    /* ===== Vùng nhận chạm ===== */
+    #touch-overlay { position: fixed; inset: 0; z-index: 10; }
+
+    /* ===== Lớp hiệu ứng (tim, sao, cánh hoa, tia sáng) ===== */
+    #fx { position: fixed; inset: 0; z-index: 20; pointer-events: none; overflow: hidden; }
+
+    .float-up, .petal, .spark, .burst {
       position: absolute;
-      width: 10px;
-      height: 10px;
-      background: rgba(255,255,255,0.7);
-      border-radius: 50%;
-      animation: rise 3s linear infinite;
+      pointer-events: none;
+      will-change: transform, opacity;
     }
-    @keyframes rise {
-      from { transform: translateY(0); opacity: 1; }
-      to { transform: translateY(-100vh); opacity: 0; }
+
+    /* Tim & sao bay lên từ đáy màn hình */
+    .float-up { bottom: -40px; animation: floatUp var(--dur) linear forwards; }
+    @keyframes floatUp {
+      0%   { transform: translate(0, 0) rotate(0deg) scale(.5);            opacity: 0; }
+      12%  { opacity: 1; }
+      50%  { transform: translate(var(--sway), -52vh) rotate(22deg) scale(1); }
+      100% { transform: translate(calc(var(--sway) * -.6), -108vh) rotate(-18deg) scale(.75); opacity: 0; }
+    }
+
+    /* Cánh hoa rơi xuống */
+    .petal { top: -50px; animation: petalFall var(--dur) linear forwards; }
+    @keyframes petalFall {
+      0%   { transform: translate(0, 0) rotate(0deg);                 opacity: 0; }
+      10%  { opacity: .95; }
+      100% { transform: translate(var(--sway), 112vh) rotate(540deg); opacity: 0; }
+    }
+
+    /* Tia sáng bám theo con trỏ */
+    .spark { animation: sparkPop .7s ease-out forwards; }
+    @keyframes sparkPop {
+      0%   { transform: translate(-50%, -50%) scale(0)   rotate(0deg);   opacity: 1; }
+      50%  { transform: translate(-50%, -50%) scale(1.2) rotate(90deg);  opacity: 1; }
+      100% { transform: translate(-50%, -50%) scale(.3)  rotate(180deg); opacity: 0; }
+    }
+
+    /* Chùm tim nổ ra khi chạm */
+    .burst { animation: burstOut .9s cubic-bezier(.22,.68,.35,1) forwards; }
+    @keyframes burstOut {
+      0%   { transform: translate(-50%, -50%) scale(.2); opacity: 1; }
+      100% { transform: translate(calc(-50% + var(--dx)), calc(-50% + var(--dy))) scale(1.15) rotate(var(--rot)); opacity: 0; }
+    }
+
+    /* ===== Bong bóng thoại ===== */
+    .bubble-msg {
+      position: absolute;
+      z-index: 9999;
+      max-width: min(72vw, 320px);
+      padding: 10px 18px;
+      border-radius: 22px;
+      background: linear-gradient(140deg, #ff9ec9, var(--pink-deep));
+      color: #fff;
+      font-size: clamp(15px, 4.2vw, 19px);
+      font-weight: 700;
+      line-height: 1.35;
+      text-align: center;
+      white-space: pre-wrap;
+      box-shadow: 0 8px 22px rgba(255, 95, 162, .38), 0 0 0 3px rgba(255,255,255,.85);
+      pointer-events: none;
+      transform-origin: center bottom;
+      animation: bubblePop .45s cubic-bezier(.18,1.5,.42,1) forwards, bubbleWiggle 1.6s ease-in-out .45s infinite;
+    }
+    /* Cái đuôi nhọn của bong bóng */
+    .bubble-msg::after {
+      content: '';
+      position: absolute;
+      bottom: -8px; left: 50%;
+      width: 16px; height: 16px;
+      background: var(--pink-deep);
+      transform: translateX(-50%) rotate(45deg);
+      border-radius: 3px;
+    }
+    .bubble-msg.leaving {
+      animation: bubbleLeave 1.1s ease-out forwards;
+    }
+
+    @keyframes bubblePop {
+      0%   { transform: translate(-50%, -50%) scale(.3) rotate(-9deg); opacity: 0; }
+      100% { transform: translate(-50%, -50%) scale(1)  rotate(0deg);  opacity: 1; }
+    }
+    @keyframes bubbleWiggle {
+      0%, 100% { transform: translate(-50%, -50%) rotate(-1.6deg); }
+      50%      { transform: translate(-50%, -50%) rotate(1.6deg); }
+    }
+    @keyframes bubbleLeave {
+      to { transform: translate(-50%, -190%) scale(.85); opacity: 0; }
+    }
+
+    /* ===== Tên hiển thị ===== */
+    #name-tag {
+      position: fixed;
+      top: 22px; left: 50%;
+      transform: translateX(-50%);
+      z-index: 30;
+      padding: 8px 24px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, .55);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      box-shadow: 0 6px 18px rgba(255, 143, 192, .28);
+      font-size: clamp(18px, 5vw, 26px);
+      font-weight: 800;
+      letter-spacing: .3px;
+      color: var(--ink);
+      pointer-events: none;
+      animation: bob 3.4s ease-in-out infinite;
+    }
+    #name-tag b {
+      background: linear-gradient(90deg, var(--pink-deep), var(--lilac), var(--sky), var(--pink-deep));
+      background-size: 300% 100%;
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      animation: shimmer 6s linear infinite;
+    }
+    @keyframes bob     { 0%,100% { transform: translate(-50%, 0); } 50% { transform: translate(-50%, -9px); } }
+    @keyframes shimmer { to { background-position: 300% 0; } }
+
+    /* ===== Bộ đếm số lần chạm ===== */
+    #counter {
+      position: fixed;
+      right: 16px; bottom: 16px;
+      z-index: 30;
+      padding: 6px 16px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, .6);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      color: var(--ink);
+      font-size: 15px;
+      font-weight: 700;
+      box-shadow: 0 4px 12px rgba(255, 143, 192, .25);
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity .4s ease, transform .25s cubic-bezier(.2,1.6,.4,1);
+    }
+    #counter.show { opacity: 1; }
+    #counter.bump { transform: scale(1.22); }
+
+    /* ===== Gợi ý khi đứng yên quá lâu ===== */
+    #hint {
+      position: fixed;
+      left: 50%; bottom: 34px;
+      transform: translateX(-50%);
+      z-index: 30;
+      padding: 9px 22px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, .72);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      color: var(--ink);
+      font-size: 16px;
+      font-weight: 700;
+      box-shadow: 0 6px 16px rgba(255, 143, 192, .3);
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity .5s ease;
+      animation: hintBounce 1.5s ease-in-out infinite;
+    }
+    #hint.show { opacity: 1; }
+    @keyframes hintBounce {
+      0%, 100% { transform: translate(-50%, 0); }
+      50%      { transform: translate(-50%, -10px); }
+    }
+
+    /* ===== Màn hình chờ ===== */
+    #loader {
+      position: fixed; inset: 0;
+      z-index: 500;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      gap: 14px;
+      background: linear-gradient(135deg, #ffe6f0, #ccf2ff);
+      color: var(--ink);
+      font-size: 20px; font-weight: 700;
+      transition: opacity .6s ease, visibility .6s;
+    }
+    #loader.hidden { opacity: 0; visibility: hidden; }
+    #loader .paw { font-size: 46px; animation: pawSpin 1.6s ease-in-out infinite; }
+    @keyframes pawSpin {
+      0%, 100% { transform: rotate(-12deg) scale(1); }
+      50%      { transform: rotate(12deg)  scale(1.18); }
+    }
+    #loader .dots span {
+      display: inline-block;
+      animation: dotJump 1.2s ease-in-out infinite;
+    }
+    #loader .dots span:nth-child(2) { animation-delay: .18s; }
+    #loader .dots span:nth-child(3) { animation-delay: .36s; }
+    @keyframes dotJump { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-7px); } }
+
+    /* ===== Mèo dự phòng khi CDN chết ===== */
+    #fallback-cat {
+      position: fixed;
+      left: 50%; top: 50%;
+      transform: translate(-50%, -50%);
+      z-index: 3;
+      font-size: clamp(90px, 34vmin, 240px);
+      display: none;
+      animation: catHop 1.9s ease-in-out infinite;
+      filter: drop-shadow(0 12px 24px rgba(255, 95, 162, .3));
+    }
+    #fallback-cat.show { display: block; }
+    @keyframes catHop {
+      0%, 100% { transform: translate(-50%, -50%) rotate(-4deg); }
+      50%      { transform: translate(-50%, -58%) rotate(4deg);  }
+    }
+
+    /* Ai bật chế độ giảm chuyển động thì tắt bớt cho đỡ chóng mặt */
+    @media (prefers-reduced-motion: reduce) {
+      body, canvas, #name-tag, #hint, .blobs span, #fallback-cat { animation: none !important; }
     }
   </style>
 </head>
 <body>
 
+<div class="blobs"><span></span><span></span><span></span></div>
+
+<div id="name-tag">✨ <b>Cam Tú</b> 💗</div>
+<div id="fallback-cat">🐱</div>
+<div id="fx"></div>
 <div id="touch-overlay"></div>
+<div id="hint">Chạm vào màn hình đi~ 🐾</div>
+<div id="counter">🐾 0</div>
+
+<div id="loader">
+  <div class="paw">🐾</div>
+  <div>Đang gọi mèo về<span class="dots"><span>.</span><span>.</span><span>.</span></span></div>
+</div>
 
 <script>
-  const version = Date.now();
+/* =========================================================
+   Cấu hình chung — muốn chỉnh gì thì sửa ở đây là đủ
+   ========================================================= */
+const CONFIG = {
+  // Bớt hiệu ứng trên điện thoại cho đỡ giật
+  isSmallScreen : window.innerWidth < 600,
+  heartInterval : 520,   // ms — tần suất tim/sao bay lên
+  petalInterval : 900,   // ms — tần suất cánh hoa rơi
+  sparkThrottle : 55,    // ms — giãn cách tia sáng theo con trỏ
+  idleDelay     : 9000,  // ms — im lặng bao lâu thì hiện gợi ý
+  maxParticles  : 70,    // trần số hạt cùng lúc, tránh tụt khung hình
+};
 
-  document.addEventListener("DOMContentLoaded", () => {
-    const script = document.createElement('script');
-    script.src = `https://unpkg.com/live2d-widget@3.1.4/lib/L2Dwidget.min.js?v=${version}`;
-    script.onload = () => {
+const RISING = ['💖', '💕', '⭐', '✨', '💗', '🌟', '💞', '🫧'];
+const PETALS = ['🌸', '🌸', '🌼', '🍥', '💮'];
+const SPARKS = ['✨', '⭐', '💫'];
+const BURSTS = ['💖', '💕', '✨', '⭐', '💗', '🐾'];
+
+const QUOTES = [
+  'Meow~ 😽',
+  'Đi học về lẹ coai 👀',
+  'Chạm nữa là cắn á! 😾',
+  'Ủa alo? Định nói gì đó hả?',
+  'Gãi đầu cái đi mà~',
+  'Quào, hôm nay xinh dữ ha 😻',
+  'Đừng chọc tui, tui hờn đó 🙀',
+  'Bấm hoài không mỏi tay à 😼',
+  'Tui hổng có rảnh nha =))',
+  'Bạn muốn nuôi tui hả? 😹',
+  'Cam Tú cute số dzách 💅',
+  'Ủa bạn ế hả sao rảnh quá dạ?',
+  'Cái tay này... không ổn nha 🐾',
+  'Chạm nhẹ thôi, dịu dàng chứ 😳',
+  'Bé mèo đang nghỉ ngơi mà huhu 😴',
+  'Tui mà là người chắc block bạn rồi đó 😑',
+  'Hôm nay ăn gì chưa dạ? 🍡',
+  'Ưmmm... thơm ghê 😚',
+  'Xoa bụng tui cái coi 🐈',
+  'Nhớ uống nước nha 💧',
+  'Bạn là người tui thích nhất đó~ 💗',
+];
+
+// Chạm tới mốc nào thì mèo nói câu riêng cho mốc đó
+const MILESTONES = {
+  10 : 'Mười cái rồi đó nha 😳',
+  25 : 'Bạn rảnh thiệt luôn á =))',
+  50 : 'Năm mươi cái?! Tui xỉu 😵',
+  69 : 'Ơ kìa... con số gì kỳ vậy 😼',
+  100: 'Trăm cái luôn hả...\nthôi tui iu bạn rồi 💗',
+};
+
+/* ========================= Trạng thái ========================= */
+const fx       = document.getElementById('fx');
+const overlay  = document.getElementById('touch-overlay');
+const loader   = document.getElementById('loader');
+const hintEl   = document.getElementById('hint');
+const counterEl= document.getElementById('counter');
+
+let tapCount    = 0;
+let lastSparkAt = 0;
+let idleTimer   = null;
+let lastQuote   = '';
+
+const rand      = (min, max) => Math.random() * (max - min) + min;
+const pick      = arr => arr[Math.floor(Math.random() * arr.length)];
+const particleCount = () => fx.childElementCount;
+
+/** Gắn 1 phần tử hiệu ứng vào sân khấu, tự dọn khi animation kết thúc. */
+function spawn(el, lifetimeMs) {
+  if (particleCount() > CONFIG.maxParticles) return;
+  fx.appendChild(el);
+  setTimeout(() => el.remove(), lifetimeMs);
+}
+
+/* ========================= Các hiệu ứng nền ========================= */
+
+/** Tim và sao lững lờ bay lên từ đáy màn hình. */
+function spawnRising() {
+  if (document.hidden) return;
+  const el = document.createElement('div');
+  const dur = rand(4.5, 8);
+  el.className = 'float-up';
+  el.textContent = pick(RISING);
+  el.style.left     = `${rand(0, 100)}vw`;
+  el.style.fontSize = `${rand(14, 30)}px`;
+  el.style.setProperty('--sway', `${rand(-60, 60)}px`);
+  el.style.setProperty('--dur', `${dur}s`);
+  spawn(el, dur * 1000);
+}
+
+/** Cánh hoa xoay tròn rơi từ trên xuống. */
+function spawnPetal() {
+  if (document.hidden) return;
+  const el = document.createElement('div');
+  const dur = rand(7, 12);
+  el.className = 'petal';
+  el.textContent = pick(PETALS);
+  el.style.left     = `${rand(0, 100)}vw`;
+  el.style.fontSize = `${rand(16, 30)}px`;
+  el.style.opacity  = rand(.55, .95);
+  el.style.setProperty('--sway', `${rand(-120, 120)}px`);
+  el.style.setProperty('--dur', `${dur}s`);
+  spawn(el, dur * 1000);
+}
+
+/** Tia sáng nhỏ rắc theo con trỏ chuột. */
+function spawnSpark(x, y) {
+  const now = Date.now();
+  if (now - lastSparkAt < CONFIG.sparkThrottle) return;
+  lastSparkAt = now;
+
+  const el = document.createElement('div');
+  el.className = 'spark';
+  el.textContent = pick(SPARKS);
+  el.style.left     = `${x}px`;
+  el.style.top      = `${y}px`;
+  el.style.fontSize = `${rand(10, 20)}px`;
+  spawn(el, 750);
+}
+
+/** Chùm tim bắn tỏa ra từ điểm vừa chạm. */
+function spawnBurst(x, y, amount) {
+  const n = amount || (CONFIG.isSmallScreen ? 8 : 12);
+  for (let i = 0; i < n; i++) {
+    const angle = (Math.PI * 2 * i) / n + rand(-.25, .25);
+    const dist  = rand(60, 150);
+    const el    = document.createElement('div');
+    el.className   = 'burst';
+    el.textContent = pick(BURSTS);
+    el.style.left     = `${x}px`;
+    el.style.top      = `${y}px`;
+    el.style.fontSize = `${rand(16, 30)}px`;
+    el.style.setProperty('--dx',  `${Math.cos(angle) * dist}px`);
+    el.style.setProperty('--dy',  `${Math.sin(angle) * dist}px`);
+    el.style.setProperty('--rot', `${rand(-180, 180)}deg`);
+    spawn(el, 950);
+  }
+}
+
+/* ========================= Bong bóng thoại ========================= */
+
+function showMessage(text, x, y) {
+  const msg = document.createElement('div');
+  msg.className   = 'bubble-msg';
+  msg.textContent = text;
+
+  // Kéo bong bóng vào trong màn hình, tránh bị cắt mất ở rìa
+  const margin = 90;
+  msg.style.left = `${Math.min(Math.max(x, margin), window.innerWidth - margin)}px`;
+  msg.style.top  = `${Math.max(y - 60, 70)}px`;
+
+  document.body.appendChild(msg);
+  setTimeout(() => msg.classList.add('leaving'), 1900);
+  setTimeout(() => msg.remove(), 3100);
+}
+
+/** Bốc câu thoại ngẫu nhiên, nhưng không lặp lại y câu vừa nói. */
+function randomQuote() {
+  let q = pick(QUOTES);
+  let guard = 0;
+  while (q === lastQuote && guard++ < 6) q = pick(QUOTES);
+  lastQuote = q;
+  return q;
+}
+
+/* ========================= Tương tác ========================= */
+
+function handleTap(event) {
+  const x = event.clientX;
+  const y = event.clientY;
+
+  tapCount++;
+  updateCounter();
+  hideHint();
+  resetIdleTimer();
+
+  const milestone = MILESTONES[tapCount];
+  if (milestone) {
+    // Tới mốc thì nổ to hơn và mưa tim ăn mừng
+    showMessage(milestone, x, y);
+    spawnBurst(x, y, CONFIG.isSmallScreen ? 16 : 26);
+    for (let i = 0; i < 14; i++) setTimeout(spawnRising, i * 70);
+  } else {
+    showMessage(randomQuote(), x, y);
+    spawnBurst(x, y);
+  }
+}
+
+function updateCounter() {
+  counterEl.textContent = `🐾 ${tapCount}`;
+  counterEl.classList.add('show', 'bump');
+  setTimeout(() => counterEl.classList.remove('bump'), 220);
+}
+
+/* ========================= Gợi ý lúc rảnh ========================= */
+
+function showHint() { hintEl.classList.add('show'); }
+function hideHint() { hintEl.classList.remove('show'); }
+
+function resetIdleTimer() {
+  clearTimeout(idleTimer);
+  idleTimer = setTimeout(showHint, CONFIG.idleDelay);
+}
+
+/* ========================= Nạp Live2D ========================= */
+
+let catReady = false;
+
+function hideLoader() {
+  loader.classList.add('hidden');
+}
+
+/** CDN chết thì vẫn phải có con mèo, không để trang trống trơn. */
+function showFallbackCat() {
+  if (catReady) return;
+  document.getElementById('fallback-cat').classList.add('show');
+  hideLoader();
+}
+
+function loadLive2D() {
+  const script = document.createElement('script');
+  script.src = 'https://unpkg.com/live2d-widget@3.1.4/lib/L2Dwidget.min.js';
+
+  script.onload = () => {
+    try {
       L2Dwidget.init({
         model: {
-          jsonPath: `https://unpkg.com/live2d-widget-model-tororo@1.0.5/assets/tororo.model.json?v=${version}`
+          jsonPath: 'https://unpkg.com/live2d-widget-model-tororo@1.0.5/assets/tororo.model.json'
         },
         display: {
-          position: "right",
-          width: window.innerWidth,
+          position: 'right',
+          width:  window.innerWidth,
           height: window.innerHeight,
           hOffset: 0,
           vOffset: 0
         },
         mobile: { show: true },
-        react: { opacityDefault: 1, opacityOnHover: 1 }
+        react:  { opacityDefault: 1, opacityOnHover: 1 }
       });
-
-      setupInteraction();
-      setInterval(createBubble, 600);
-    };
-    document.body.appendChild(script);
-  });
-
-  function setupInteraction() {
-    const overlay = document.getElementById('touch-overlay');
-    const isTouch = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
-
-    if (isTouch) {
-      overlay.addEventListener('touchstart', handleTap);
-    } else {
-      overlay.addEventListener('click', handleTap);
+      catReady = true;
+      setTimeout(hideLoader, 1200);
+    } catch (err) {
+      console.error('Live2D init lỗi:', err);
+      showFallbackCat();
     }
+  };
+
+  script.onerror = showFallbackCat;
+  document.body.appendChild(script);
+
+  // Chốt chặn cuối: 9 giây mà mèo chưa ra thì dùng bản dự phòng
+  setTimeout(() => { if (!catReady) showFallbackCat(); }, 9000);
+}
+
+/* ========================= Khởi động ========================= */
+
+document.addEventListener('DOMContentLoaded', () => {
+  loadLive2D();
+
+  // pointerdown xử lý được cả chuột lẫn cảm ứng, khỏi lo bắn sự kiện hai lần
+  overlay.addEventListener('pointerdown', handleTap);
+
+  // Tia sáng chỉ rắc theo chuột, màn cảm ứng bỏ qua cho nhẹ máy
+  if (window.matchMedia('(hover: hover)').matches) {
+    overlay.addEventListener('pointermove', e => spawnSpark(e.clientX, e.clientY));
   }
 
-  function handleTap(event) {
-    let x = 0, y = 0;
-    if (event.touches && event.touches.length > 0) {
-      x = event.touches[0].clientX;
-      y = event.touches[0].clientY;
-    } else {
-      x = event.clientX;
-      y = event.clientY;
-    }
-    showMessage(randomQuote(), x, y);
-  }
+  setInterval(spawnRising, CONFIG.heartInterval);
+  setInterval(spawnPetal,  CONFIG.petalInterval);
 
-  function showMessage(text, x, y) {
-    const msg = document.createElement('div');
-    msg.innerText = text;
-    Object.assign(msg.style, {
-      position: 'absolute',
-      left: `${x}px`,
-      top: `${y}px`,
-      background: '#ff69b4',
-      color: '#fff',
-      padding: '6px 12px',
-      borderRadius: '10px',
-      fontSize: '16px',
-      transform: 'translate(-50%, -50%)',
-      pointerEvents: 'none',
-      opacity: '1',
-      transition: 'all 2s ease-out',
-      zIndex: 9999,
-    });
-    document.body.appendChild(msg);
+  // Mồi sẵn ít hạt để trang không trống lúc mới mở
+  for (let i = 0; i < 8; i++) setTimeout(spawnRising, i * 260);
 
-    setTimeout(() => {
-      msg.style.top = `${y - 100}px`;
-      msg.style.opacity = '0';
-    }, 500);
+  resetIdleTimer();
+});
 
-    setTimeout(() => {
-      msg.remove();
-    }, 3000);
-  }
-
-  function randomQuote() {
-    const quotes = [
-      "Meow~ 😽",
-      "Lên SG lẹ coai 👀",
-      "Chạm nữa là cắn á! 😾",
-      "Ủa alo? Định nói gì đó hả?",
-      "Gãi đầu cái đi mà~",
-      "Quào, hôm nay xinh dữ ha 😻",
-      "Đừng chọc tui, tui hờn đó 🙀",
-      "Bấm hoài không mỏi tay à 😼",
-      "Tui hổng có rảnh nha =))",
-      "Bạn muốn nuôi tui hả? 😹",
-      "Cam Tú cute số dzách 💅",
-      "Ủa bạn ế hả sao rảnh quá dạ?",
-      "Cái tay này... không ổn nha 🐾",
-      "Chạm nhẹ thôi, dịu dàng chứ 😳",
-      "Bé mèo đang nghỉ ngơi mà huhu 😴",
-      "Tui mà là người chắc block bạn rồi đó 😑"
-    ];
-    return quotes[Math.floor(Math.random() * quotes.length)];
-  }
-
-  function createBubble() {
-    const bubble = document.createElement('div');
-    bubble.className = 'bubble';
-    bubble.style.left = `${Math.random() * window.innerWidth}px`;
-    bubble.style.top = `${window.innerHeight}px`;
-    bubble.style.width = bubble.style.height = `${Math.random() * 8 + 4}px`;
-    document.body.appendChild(bubble);
-    setTimeout(() => bubble.remove(), 3000);
-  }
+// Xoay ngang/dọc điện thoại thì vẽ lại mèo cho vừa màn hình
+window.addEventListener('orientationchange', () => {
+  setTimeout(() => location.reload(), 350);
+});
 </script>
 
 </body>
