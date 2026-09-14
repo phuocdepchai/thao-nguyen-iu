@@ -2,7 +2,7 @@
 <html lang="vi">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"/>
   <meta name="theme-color" content="#ffd6e8" />
   <title>Thao Nguyen Cute 💗</title>
 
@@ -76,11 +76,14 @@
       z-index: 2;
       /* Mèo thở nhè nhẹ cho có sức sống */
       animation: breathe 4.5s ease-in-out infinite;
+      transition: filter 1.2s ease;
     }
     @keyframes breathe {
       0%, 100% { transform: translateY(0)     scale(1); }
       50%      { transform: translateY(-6px)  scale(1.012); }
     }
+    /* Vào tiên cảnh thì mèo phát sáng hồng */
+    body.fairy canvas { filter: drop-shadow(0 0 26px rgba(255, 105, 180, .9)); }
 
     /* ===== Vùng nhận chạm ===== */
     #touch-overlay { position: fixed; inset: 0; z-index: 10; }
@@ -171,11 +174,17 @@
       to { transform: translate(-50%, -190%) scale(.85); opacity: 0; }
     }
 
-    /* ===== Tên hiển thị ===== */
+    /* ===== Tên hiển thị =====
+       Căn giữa bằng left/right:0 + margin auto thay vì left:50%.
+       Cách cũ giới hạn bề rộng hộp chỉ còn nửa màn hình nên chữ bị rớt dòng. */
     #name-tag {
       position: fixed;
-      top: 22px; left: 50%;
-      transform: translateX(-50%);
+      top: calc(18px + env(safe-area-inset-top, 0px));
+      left: 0; right: 0;
+      margin-inline: auto;
+      width: max-content;
+      max-width: calc(100vw - 24px);
+      white-space: nowrap;
       z-index: 30;
       padding: 8px 24px;
       border-radius: 999px;
@@ -183,7 +192,7 @@
       backdrop-filter: blur(10px);
       -webkit-backdrop-filter: blur(10px);
       box-shadow: 0 6px 18px rgba(255, 143, 192, .28);
-      font-size: clamp(18px, 5vw, 26px);
+      font-size: clamp(17px, 4.6vw, 26px);
       font-weight: 800;
       letter-spacing: .3px;
       color: var(--ink);
@@ -198,13 +207,15 @@
       color: transparent;
       animation: shimmer 6s linear infinite;
     }
-    @keyframes bob     { 0%,100% { transform: translate(-50%, 0); } 50% { transform: translate(-50%, -9px); } }
+    /* Không còn translateX(-50%) nên bob chỉ cần nhấc lên hạ xuống */
+    @keyframes bob     { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-9px); } }
     @keyframes shimmer { to { background-position: 300% 0; } }
 
     /* ===== Bộ đếm số lần chạm ===== */
     #counter {
       position: fixed;
-      right: 16px; bottom: 16px;
+      right: 16px;
+      bottom: calc(16px + env(safe-area-inset-bottom, 0px));
       z-index: 30;
       padding: 6px 16px;
       border-radius: 999px;
@@ -214,6 +225,7 @@
       color: var(--ink);
       font-size: 15px;
       font-weight: 700;
+      white-space: nowrap;
       box-shadow: 0 4px 12px rgba(255, 143, 192, .25);
       pointer-events: none;
       opacity: 0;
@@ -222,11 +234,15 @@
     #counter.show { opacity: 1; }
     #counter.bump { transform: scale(1.22); }
 
-    /* ===== Gợi ý khi đứng yên quá lâu ===== */
+    /* ===== Gợi ý khi đứng yên quá lâu ===== (căn giữa giống #name-tag) */
     #hint {
       position: fixed;
-      left: 50%; bottom: 34px;
-      transform: translateX(-50%);
+      bottom: calc(30px + env(safe-area-inset-bottom, 0px));
+      left: 0; right: 0;
+      margin-inline: auto;
+      width: max-content;
+      max-width: calc(100vw - 24px);
+      white-space: nowrap;
       z-index: 30;
       padding: 9px 22px;
       border-radius: 999px;
@@ -234,7 +250,7 @@
       backdrop-filter: blur(8px);
       -webkit-backdrop-filter: blur(8px);
       color: var(--ink);
-      font-size: 16px;
+      font-size: clamp(14px, 4vw, 16px);
       font-weight: 700;
       box-shadow: 0 6px 16px rgba(255, 143, 192, .3);
       pointer-events: none;
@@ -244,8 +260,248 @@
     }
     #hint.show { opacity: 1; }
     @keyframes hintBounce {
-      0%, 100% { transform: translate(-50%, 0); }
-      50%      { transform: translate(-50%, -10px); }
+      0%, 100% { transform: translateY(0); }
+      50%      { transform: translateY(-10px); }
+    }
+
+    /* =====================================================
+       TIÊN CẢNH — kích hoạt khi chạm đủ số lần
+       Lớp nền (#fairy) nằm SAU mèo (z=1) để mèo vẫn rõ nét,
+       lớp chữ (#fairy-text) nằm TRÊN cùng (z=25).
+       ===================================================== */
+    #fairy {
+      position: fixed; inset: 0;
+      z-index: 1;
+      pointer-events: none;
+      overflow: hidden;
+      opacity: 0; visibility: hidden;
+      transition: opacity 1.3s ease, visibility 1.3s;
+    }
+    #fairy.show { opacity: 1; visibility: visible; }
+
+    /* Nền hồng rực, sáng ở giữa, đậm dần ra mép */
+    .fairy-glow {
+      position: absolute; inset: 0;
+      background: radial-gradient(circle at 50% 38%,
+        rgba(255, 255, 255, .6)  0%,
+        rgba(255, 196, 228, .8)  26%,
+        rgba(255, 138, 200, .92) 58%,
+        rgba(216, 146, 255, .96) 100%);
+      animation: glowPulse 3.4s ease-in-out infinite;
+    }
+    @keyframes glowPulse {
+      0%, 100% { filter: brightness(1); }
+      50%      { filter: brightness(1.09); }
+    }
+
+    /* Tia sáng xoay chậm như ánh mặt trời xuyên mây */
+    .fairy-rays {
+      position: absolute;
+      left: 50%; top: 40%;
+      width: 170vmax; height: 170vmax;
+      margin: -85vmax 0 0 -85vmax;
+      background: repeating-conic-gradient(from 0deg,
+        rgba(255, 255, 255, 0)   0deg  9deg,
+        rgba(255, 255, 255, .38) 9deg  13deg);
+      -webkit-mask-image: radial-gradient(circle, rgba(0,0,0,1) 0%, rgba(0,0,0,.55) 30%, transparent 62%);
+      mask-image:         radial-gradient(circle, rgba(0,0,0,1) 0%, rgba(0,0,0,.55) 30%, transparent 62%);
+      animation: raysSpin 48s linear infinite;
+      opacity: .85;
+    }
+    @keyframes raysSpin { to { transform: rotate(360deg); } }
+
+    /* Bokeh — những đốm sáng tròn trôi lơ lửng */
+    .fairy-orbs span {
+      position: absolute;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(255,255,255,.95), rgba(255,210,235,.55) 45%, transparent 72%);
+      animation: orbFloat var(--d) ease-in-out infinite alternate;
+    }
+    @keyframes orbFloat {
+      from { transform: translate(0, 0) scale(1);             opacity: .45; }
+      to   { transform: translate(var(--dx), var(--dy)) scale(1.3); opacity: .95; }
+    }
+
+    /* Viền tối hồng nhẹ ở mép, tạo cảm giác sâu */
+    #fairy-vignette {
+      position: fixed; inset: 0;
+      z-index: 4;
+      pointer-events: none;
+      background: radial-gradient(ellipse at center, transparent 48%, rgba(255, 90, 170, .38) 100%);
+      opacity: 0;
+      transition: opacity 1.3s ease;
+    }
+    body.fairy #fairy-vignette { opacity: 1; }
+
+    /* Chớp sáng trắng → hồng lúc bước vào */
+    #flash {
+      position: fixed; inset: 0;
+      z-index: 600;
+      pointer-events: none;
+      background: #fff;
+      opacity: 0;
+    }
+    #flash.go { animation: flashOut 1s ease-out forwards; }
+    @keyframes flashOut {
+      0%   { opacity: 1;  background: #fff; }
+      35%  { opacity: .9; background: #ffd3ea; }
+      100% { opacity: 0;  background: #ff8fc0; }
+    }
+
+    /* Lớp chữ của tiên cảnh */
+    #fairy-text { position: fixed; inset: 0; z-index: 25; pointer-events: none; }
+
+    .fairy-title {
+      position: absolute;
+      left: 0; right: 0; top: 42%;
+      margin-inline: auto;
+      width: max-content; max-width: 92vw;
+      text-align: center;
+      font-size: clamp(30px, 8.5vw, 64px);
+      font-weight: 800;
+      line-height: 1.15;
+      background: linear-gradient(90deg, #fff 0%, #ffd6ec 25%, #fff 50%, #e7d3ff 75%, #fff 100%);
+      background-size: 200% 100%;
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      filter: drop-shadow(0 4px 18px rgba(255, 80, 160, .6));
+      animation: titleIn 1s cubic-bezier(.2,1.4,.4,1) forwards, shimmer 3s linear infinite;
+    }
+    .fairy-title.out { animation: titleOut .8s ease-in forwards; }
+    @keyframes titleIn {
+      from { opacity: 0; transform: translateY(-40px) scale(.7); letter-spacing: 8px; }
+      to   { opacity: 1; transform: translateY(0)     scale(1);  letter-spacing: 1px; }
+    }
+    @keyframes titleOut {
+      to { opacity: 0; transform: translateY(-30px) scale(1.15); filter: blur(6px); }
+    }
+
+    /* Câu thả thính — thẻ kính mờ, viền sáng hồng */
+    .thinh {
+      position: absolute;
+      left: 0; right: 0; top: 15vh;
+      margin-inline: auto;
+      width: max-content; max-width: min(88vw, 520px);
+      padding: 14px 22px;
+      border-radius: 24px;
+      background: rgba(255, 255, 255, .84);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      box-shadow: 0 0 0 2px rgba(255,255,255,.95),
+                  0 10px 40px rgba(255, 80, 160, .45),
+                  0 0 60px rgba(255, 150, 210, .55);
+      color: #b0296c;
+      font-size: clamp(17px, 4.6vw, 24px);
+      font-weight: 800;
+      line-height: 1.35;
+      text-align: center;
+      animation: thinhIn .7s cubic-bezier(.2,1.5,.4,1) forwards, thinhFloat 2.2s ease-in-out .7s infinite;
+    }
+    .thinh.out { animation: thinhOut .6s ease-in forwards; }
+    @keyframes thinhIn {
+      from { opacity: 0; transform: translateY(30px) scale(.6); filter: blur(10px); }
+      to   { opacity: 1; transform: translateY(0)    scale(1);  filter: blur(0); }
+    }
+    @keyframes thinhFloat {
+      0%, 100% { transform: translateY(0)    rotate(-.6deg); }
+      50%      { transform: translateY(-6px) rotate(.6deg); }
+    }
+    @keyframes thinhOut {
+      to { opacity: 0; transform: translateY(-40px) scale(.9); filter: blur(6px); }
+    }
+
+    /* =====================================================
+       TỎ TÌNH — lần chạm thứ 100, chạy trên nền tiên cảnh
+       ===================================================== */
+    body.confess .fairy-glow {
+      background: radial-gradient(circle at 50% 38%,
+        rgba(255, 255, 255, .65) 0%,
+        rgba(255, 170, 215, .85) 25%,
+        rgba(255, 95, 170, .95)  60%,
+        rgba(205, 60, 150, .98)  100%);
+    }
+    body.confess canvas { filter: drop-shadow(0 0 40px rgba(255, 60, 150, 1)); }
+
+    /* Phong thư bay lên trước khi hiện thẻ */
+    .confess-intro {
+      position: absolute;
+      left: 0; right: 0; top: 38%;
+      margin-inline: auto;
+      width: max-content;
+      font-size: clamp(90px, 26vw, 200px);
+      line-height: 1;
+      filter: drop-shadow(0 10px 30px rgba(255, 60, 150, .6));
+      animation: introIn 1.1s cubic-bezier(.2,1.5,.4,1) forwards, wobble .8s ease-in-out 1.1s infinite;
+    }
+    .confess-intro.out { animation: titleOut .7s ease-in forwards; }
+    @keyframes introIn {
+      from { opacity: 0; transform: translateY(70px) scale(.2) rotate(-25deg); }
+      to   { opacity: 1; transform: translateY(0)    scale(1)  rotate(0deg); }
+    }
+    @keyframes wobble {
+      0%, 100% { transform: rotate(-7deg) scale(1); }
+      50%      { transform: rotate(7deg)  scale(1.06); }
+    }
+
+    /* Khung căn giữa bằng flex, khỏi đụng transform của animation */
+    .confess-wrap {
+      position: absolute; inset: 0;
+      display: flex; align-items: center; justify-content: center;
+      padding: 0 5vw;
+    }
+    .confess-card {
+      max-width: min(90vw, 560px);
+      padding: 26px 34px 30px;
+      border-radius: 34px;
+      background: rgba(255, 255, 255, .92);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      box-shadow: 0 0 0 3px #fff,
+                  0 0 0 7px rgba(255, 120, 190, .6),
+                  0 20px 70px rgba(255, 60, 150, .55),
+                  0 0 120px rgba(255, 150, 210, .75);
+      text-align: center;
+      animation: cardIn 1s cubic-bezier(.2,1.5,.4,1) forwards;
+    }
+    .confess-card.out { animation: cardOut .8s ease-in forwards; }
+    @keyframes cardIn {
+      from { opacity: 0; transform: scale(.3) rotate(-8deg); filter: blur(12px); }
+      to   { opacity: 1; transform: scale(1)  rotate(0deg);  filter: blur(0); }
+    }
+    @keyframes cardOut {
+      to { opacity: 0; transform: translateY(-60px) scale(1.1); filter: blur(8px); }
+    }
+    .confess-heart {
+      font-size: clamp(64px, 18vw, 120px);
+      line-height: 1;
+      margin-bottom: 6px;
+      animation: heartbeat 1.1s ease-in-out infinite;
+      filter: drop-shadow(0 6px 18px rgba(255, 60, 150, .55));
+    }
+    @keyframes heartbeat {
+      0%, 100% { transform: scale(1); }
+      14%      { transform: scale(1.28); }
+      28%      { transform: scale(1); }
+      42%      { transform: scale(1.18); }
+      70%      { transform: scale(1); }
+    }
+    .confess-lead {
+      color: #c2467f;
+      font-size: clamp(16px, 4.4vw, 22px);
+      font-weight: 700;
+      margin-bottom: 4px;
+    }
+    .confess-text {
+      font-size: clamp(32px, 9.5vw, 60px);
+      font-weight: 800;
+      line-height: 1.12;
+      background: linear-gradient(90deg, #ff3d8f, #ff6fb0, #ff3d8f);
+      background-size: 200% 100%;
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      animation: shimmer 2.6s linear infinite;
     }
 
     /* ===== Màn hình chờ ===== */
@@ -255,6 +511,8 @@
       display: flex; flex-direction: column;
       align-items: center; justify-content: center;
       gap: 14px;
+      padding: 0 20px;
+      text-align: center;
       background: linear-gradient(135deg, #ffe6f0, #ccf2ff);
       color: var(--ink);
       font-size: 20px; font-weight: 700;
@@ -293,7 +551,8 @@
 
     /* Ai bật chế độ giảm chuyển động thì tắt bớt cho đỡ chóng mặt */
     @media (prefers-reduced-motion: reduce) {
-      body, canvas, #name-tag, #hint, .blobs span, #fallback-cat { animation: none !important; }
+      body, canvas, #name-tag, #hint, .blobs span, #fallback-cat,
+      .fairy-rays, .fairy-glow, .fairy-orbs span { animation: none !important; }
     }
   </style>
 </head>
@@ -301,12 +560,24 @@
 
 <div class="blobs"><span></span><span></span><span></span></div>
 
+<!-- Tiên cảnh: nền nằm sau mèo -->
+<div id="fairy">
+  <div class="fairy-glow"></div>
+  <div class="fairy-rays"></div>
+  <div class="fairy-orbs"></div>
+</div>
+<div id="fairy-vignette"></div>
+
 <div id="name-tag">✨ <b>Thảo Nguyên</b> 💗</div>
 <div id="fallback-cat">🐱</div>
 <div id="fx"></div>
 <div id="touch-overlay"></div>
 <div id="hint">Chạm vào màn hình đi~ 🐾</div>
 <div id="counter">🐾 0</div>
+
+<!-- Tiên cảnh: chữ nằm trên cùng -->
+<div id="fairy-text"></div>
+<div id="flash"></div>
 
 <div id="loader">
   <div class="paw">🐾</div>
@@ -327,10 +598,23 @@ const CONFIG = {
   maxParticles  : 70,    // trần số hạt cùng lúc, tránh tụt khung hình
 };
 
+/* Tiên cảnh */
+const FAIRY = {
+  triggerAt   : 20,     // chạm đủ 20 lần → vào tiên cảnh lần đầu
+  repeatEvery : 40,     // sau đó cứ thêm 40 lần chạm lại vào (60, 100, 140...)
+  duration    : 19000,  // ms — tiên cảnh kéo dài bao lâu
+  titleHold   : 2600,   // ms — chữ "Lạc vào tiên cảnh" đứng bao lâu
+  lineEvery   : 3000,   // ms — mỗi câu thả thính cách nhau
+  rainEvery   : 110,    // ms — mưa hoa dày tới mức nào
+  orbCount    : 14,     // số đốm bokeh
+  maxParticles: 150,    // trần hạt riêng cho tiên cảnh
+};
+
 const RISING = ['💖', '💕', '⭐', '✨', '💗', '🌟', '💞', '🫧'];
 const PETALS = ['🌸', '🌸', '🌼', '🍥', '💮'];
 const SPARKS = ['✨', '⭐', '💫'];
 const BURSTS = ['💖', '💕', '✨', '⭐', '💗', '🐾'];
+const FAIRY_RAIN = ['🌸', '🌸', '🌸', '🌺', '💮', '✨', '🌟', '💗', '🩷', '🦋', '🦋', '💫'];
 
 const QUOTES = [
   'Meow~ 😽',
@@ -362,24 +646,77 @@ const MILESTONES = {
   25 : 'Bạn rảnh thiệt luôn á =))',
   50 : 'Năm mươi cái?! Tui xỉu 😵',
   69 : 'Ơ kìa... con số gì kỳ vậy 😼',
-  100: 'Trăm cái luôn hả...\nthôi tui iu bạn rồi 💗',
 };
 
+// Câu thả thính trong tiên cảnh — xáo thứ tự mỗi lần vào
+const THINH = [
+  'Trái đất quay quanh mặt trời, còn tui quay quanh bạn 🌍💫',
+  'Bạn có phải wifi không? Vì tui thấy kết nối liền 📶💗',
+  'Tim tui có 4 ngăn, bạn chiếm hết 3 rồi đó 🫀',
+  'Bạn là ly trà sữa full topping của đời tui 🧋',
+  'Bạn có mệt không? Chạy trong đầu tui cả ngày rồi 🏃‍♀️💨',
+  'Hôm nay trời hồng, vì có bạn ở đây 🌸',
+  'Cho tui mượn cái này nha... trái tim bạn á 💘',
+  'Bạn ngọt hơn kẹo bông, mèo tui tan chảy rồi 🍭',
+  'Ai gọi 115 giúp, tui vừa fall in love rồi 🚑💕',
+  'Tui không giỏi toán, nhưng tui với bạn = 1 cặp 🧮',
+  'Nếu cute là tội, chắc bạn bị tù chung thân 👮‍♀️💗',
+  'Bạn là ngoại lệ duy nhất của cái tính ngại của tui 😳',
+  'Thảo Nguyên ơi, tiên cảnh đẹp thật, nhưng vẫn thua bạn 🌷',
+  'Đừng nhìn tui kiểu đó, tui đỏ mặt rồi nè 🙈',
+  'Ở lại chơi với tui thêm xíu nữa đi mà~ 🐾💗',
+];
+const FAIRY_TITLE    = '✧ Lạc vào tiên cảnh ✧';
+const FAIRY_FAREWELL = 'Hết tiên cảnh rồi...\nnhưng tui vẫn ở đây với bạn 🐾';
+
+/* Tỏ tình — lần chạm thứ 100 */
+const CONFESSION = {
+  at        : 100,
+  lead      : 'Thảo Nguyên ơi...',      // dòng nhỏ phía trên, xoá nếu không muốn
+  text      : 'Làm ny anh nha :3',
+  farewell  : 'Nhớ trả lời anh nha 🥺💗',
+  introHold : 1900,    // ms — 💌 đứng bao lâu trước khi hiện thẻ
+  duration  : 30000,   // ms — thẻ tỏ tình đứng bao lâu
+};
+const CONFESS_RAIN = ['💗', '💖', '💕', '💞', '🩷', '❤️', '💘', '🌹', '✨', '💗'];
+
 /* ========================= Trạng thái ========================= */
-const fx       = document.getElementById('fx');
-const overlay  = document.getElementById('touch-overlay');
-const loader   = document.getElementById('loader');
-const hintEl   = document.getElementById('hint');
-const counterEl= document.getElementById('counter');
+const fx        = document.getElementById('fx');
+const overlay   = document.getElementById('touch-overlay');
+const loader    = document.getElementById('loader');
+const hintEl    = document.getElementById('hint');
+const counterEl = document.getElementById('counter');
+const fairyEl   = document.getElementById('fairy');
+const fairyText = document.getElementById('fairy-text');
+const flashEl   = document.getElementById('flash');
 
 let tapCount    = 0;
 let lastSparkAt = 0;
 let idleTimer   = null;
 let lastQuote   = '';
 
+// Trạng thái riêng của tiên cảnh
+let fairyActive = false;
+let fairyLines  = [];
+let fairyIdx    = 0;
+let fairyTimers = { rain: null, line: null, end: null };
+let currentThinh = null;
+let fairyMode    = 'thinh';   // 'thinh' | 'confess'
+let confessCard  = null;
+
 const rand      = (min, max) => Math.random() * (max - min) + min;
 const pick      = arr => arr[Math.floor(Math.random() * arr.length)];
 const particleCount = () => fx.childElementCount;
+
+/** Xáo mảng kiểu Fisher–Yates, trả về bản sao. */
+function shuffle(arr) {
+  const a = arr.slice();
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
 
 /** Gắn 1 phần tử hiệu ứng vào sân khấu, tự dọn khi animation kết thúc. */
 function spawn(el, lifetimeMs) {
@@ -479,6 +816,197 @@ function randomQuote() {
   return q;
 }
 
+/* ========================= TIÊN CẢNH ========================= */
+
+/** Lần chạm thứ n có phải lúc bước vào tiên cảnh không. */
+function shouldEnterFairy(n) {
+  if (n === FAIRY.triggerAt) return true;
+  return n > FAIRY.triggerAt && (n - FAIRY.triggerAt) % FAIRY.repeatEvery === 0;
+}
+
+/** Rải bokeh một lần, các lần sau dùng lại. */
+function buildOrbs() {
+  const box = fairyEl.querySelector('.fairy-orbs');
+  if (box.childElementCount) return;
+  const count = CONFIG.isSmallScreen ? Math.round(FAIRY.orbCount * .7) : FAIRY.orbCount;
+  for (let i = 0; i < count; i++) {
+    const s = document.createElement('span');
+    const size = rand(24, 96);
+    s.style.width = s.style.height = `${size}px`;
+    s.style.left = `${rand(0, 100)}vw`;
+    s.style.top  = `${rand(0, 100)}vh`;
+    s.style.setProperty('--d',  `${rand(5, 11)}s`);
+    s.style.setProperty('--dx', `${rand(-70, 70)}px`);
+    s.style.setProperty('--dy', `${rand(-90, 40)}px`);
+    s.style.animationDelay = `${rand(-8, 0)}s`;
+    box.appendChild(s);
+  }
+}
+
+/** Chớp sáng trắng → hồng. */
+function flash() {
+  flashEl.classList.remove('go');
+  void flashEl.offsetWidth;          // ép trình duyệt reset animation
+  flashEl.classList.add('go');
+}
+
+/** Mưa hoa + bướm + sao dày đặc trong tiên cảnh. */
+function spawnFairyRain() {
+  if (document.hidden) return;
+  const el = document.createElement('div');
+  const dur = rand(3.5, 6.5);
+  el.className   = 'petal';
+  el.textContent = pick(fairyMode === 'confess' ? CONFESS_RAIN : FAIRY_RAIN);
+  el.style.left     = `${rand(0, 100)}vw`;
+  el.style.fontSize = `${rand(18, 38)}px`;
+  el.style.opacity  = rand(.7, 1);
+  el.style.setProperty('--sway', `${rand(-160, 160)}px`);
+  el.style.setProperty('--dur', `${dur}s`);
+  spawn(el, dur * 1000);
+  // Thỉnh thoảng thêm một hạt sáng bay lên cho có chiều sâu
+  if (Math.random() < .35) spawnRising();
+}
+
+/** Hiện tiêu đề lớn giữa màn hình, tự biến mất. */
+function showFairyTitle() {
+  const t = document.createElement('div');
+  t.className = 'fairy-title';
+  t.textContent = FAIRY_TITLE;
+  fairyText.appendChild(t);
+  setTimeout(() => t.classList.add('out'), FAIRY.titleHold);
+  setTimeout(() => t.remove(), FAIRY.titleHold + 850);
+}
+
+/** Thay câu thính đang hiện bằng câu mới. */
+function showThinh(text) {
+  if (currentThinh) {
+    const old = currentThinh;
+    old.classList.add('out');
+    setTimeout(() => old.remove(), 650);
+  }
+  const el = document.createElement('div');
+  el.className   = 'thinh';
+  el.textContent = text;
+  fairyText.appendChild(el);
+  currentThinh = el;
+}
+
+/** Câu thính kế tiếp; gọi tay (khi chạm) hoặc theo hẹn giờ. */
+function nextThinh() {
+  clearTimeout(fairyTimers.line);
+  showThinh(fairyLines[fairyIdx++ % fairyLines.length]);
+  fairyTimers.line = setTimeout(nextThinh, FAIRY.lineEvery);
+}
+
+/** 💌 bay lên giữa màn hình rồi biến mất. */
+function showConfessIntro() {
+  const t = document.createElement('div');
+  t.className = 'confess-intro';
+  t.textContent = '💌';
+  fairyText.appendChild(t);
+  setTimeout(() => t.classList.add('out'), CONFESSION.introHold);
+  setTimeout(() => t.remove(), CONFESSION.introHold + 750);
+}
+
+/** Thẻ tỏ tình: tim đập + dòng dẫn + câu chính. */
+function showConfessCard() {
+  const wrap  = document.createElement('div');
+  const card  = document.createElement('div');
+  const heart = document.createElement('div');
+  const lead  = document.createElement('div');
+  const text  = document.createElement('div');
+  wrap.className  = 'confess-wrap';
+  card.className  = 'confess-card';
+  heart.className = 'confess-heart';
+  lead.className  = 'confess-lead';
+  text.className  = 'confess-text';
+  heart.textContent = '💗';
+  lead.textContent  = CONFESSION.lead;
+  text.textContent  = CONFESSION.text;
+  card.append(heart);
+  if (CONFESSION.lead) card.append(lead);
+  card.append(text);
+  wrap.append(card);
+  fairyText.appendChild(wrap);
+  confessCard = wrap;
+
+  // Mưa tim ăn mừng đúng lúc thẻ bật ra
+  spawnBurst(window.innerWidth / 2, window.innerHeight / 2, CONFIG.isSmallScreen ? 24 : 40);
+  for (let i = 0; i < 20; i++) setTimeout(spawnRising, i * 60);
+}
+
+/**
+ * Bước vào tiên cảnh.
+ *   mode      'thinh' (mặc định) — mèo thả thính từng câu
+ *             'confess'          — màn tỏ tình lần chạm 100
+ *   firstLine câu mốc trùng lúc này (chỉ dùng cho 'thinh')
+ */
+function enterFairyland({ mode = 'thinh', firstLine = null } = {}) {
+  fairyActive = true;
+  fairyMode   = mode;
+  fairyIdx    = 0;
+  fairyLines  = shuffle(THINH);
+  if (firstLine) fairyLines.unshift(firstLine.replace('\n', ' '));
+
+  buildOrbs();
+  flash();
+  document.body.classList.add('fairy');
+  if (mode === 'confess') document.body.classList.add('confess');
+  fairyEl.classList.add('show');
+  hideHint();
+  clearTimeout(idleTimer);
+
+  CONFIG.maxParticles = FAIRY.maxParticles;
+
+  // Nổ tim từ giữa màn hình khi vừa bước vào
+  spawnBurst(window.innerWidth / 2, window.innerHeight / 2, CONFIG.isSmallScreen ? 20 : 32);
+
+  if (mode === 'confess') {
+    fairyTimers.rain = setInterval(spawnFairyRain, Math.round(FAIRY.rainEvery * .7));
+    setTimeout(showConfessIntro, 300);
+    setTimeout(showConfessCard, CONFESSION.introHold + 900);
+    fairyTimers.end = setTimeout(exitFairyland, CONFESSION.duration);
+    return;
+  }
+
+  fairyTimers.rain = setInterval(spawnFairyRain, FAIRY.rainEvery);
+  setTimeout(showFairyTitle, 250);
+  fairyTimers.line = setTimeout(nextThinh, FAIRY.titleHold + 1100);
+  fairyTimers.end  = setTimeout(exitFairyland, FAIRY.duration);
+}
+
+/** Rời tiên cảnh, trả mọi thứ về bình thường. */
+function exitFairyland() {
+  clearInterval(fairyTimers.rain);
+  clearTimeout(fairyTimers.line);
+  clearTimeout(fairyTimers.end);
+
+  if (confessCard) {
+    const card = confessCard.querySelector('.confess-card');
+    const wrap = confessCard;
+    card.classList.add('out');
+    setTimeout(() => wrap.remove(), 850);
+    confessCard = null;
+  }
+
+  showThinh(fairyMode === 'confess' ? CONFESSION.farewell : FAIRY_FAREWELL);
+  setTimeout(() => {
+    if (currentThinh) {
+      const old = currentThinh;
+      old.classList.add('out');
+      setTimeout(() => old.remove(), 650);
+      currentThinh = null;
+    }
+  }, 2800);
+
+  fairyEl.classList.remove('show');
+  document.body.classList.remove('fairy', 'confess');
+  CONFIG.maxParticles = 70;
+  fairyMode = 'thinh';
+  fairyActive = false;
+  resetIdleTimer();
+}
+
 /* ========================= Tương tác ========================= */
 
 function handleTap(event) {
@@ -489,6 +1017,32 @@ function handleTap(event) {
   updateCounter();
   hideHint();
   resetIdleTimer();
+
+  // Đang trong tiên cảnh
+  if (fairyActive) {
+    if (fairyMode === 'confess') {
+      // Màn tỏ tình: chạm chỉ rải thêm tim, thẻ vẫn đứng nguyên
+      spawnBurst(x, y, CONFIG.isSmallScreen ? 16 : 26);
+      for (let i = 0; i < 6; i++) setTimeout(spawnRising, i * 80);
+    } else {
+      // Thả thính: chạm là mèo đổi câu mới ngay + nổ tim to
+      spawnBurst(x, y, CONFIG.isSmallScreen ? 14 : 22);
+      nextThinh();
+    }
+    return;
+  }
+
+  // Lần chạm thứ 100 → tỏ tình (ưu tiên hơn tiên cảnh thường)
+  if (tapCount === CONFESSION.at) {
+    enterFairyland({ mode: 'confess' });
+    return;
+  }
+
+  // Đủ số chạm thì bước vào tiên cảnh (mang theo câu mốc nếu trùng)
+  if (shouldEnterFairy(tapCount)) {
+    enterFairyland({ firstLine: MILESTONES[tapCount] });
+    return;
+  }
 
   const milestone = MILESTONES[tapCount];
   if (milestone) {
@@ -510,7 +1064,7 @@ function updateCounter() {
 
 /* ========================= Gợi ý lúc rảnh ========================= */
 
-function showHint() { hintEl.classList.add('show'); }
+function showHint() { if (!fairyActive) hintEl.classList.add('show'); }
 function hideHint() { hintEl.classList.remove('show'); }
 
 function resetIdleTimer() {
@@ -572,6 +1126,13 @@ function loadLive2D() {
 
 document.addEventListener('DOMContentLoaded', () => {
   loadLive2D();
+
+  // Xem thử màn tỏ tình khỏi phải chạm 100 lần: mở  ...index.html?tap=99
+  const preset = parseInt(new URLSearchParams(location.search).get('tap'), 10);
+  if (Number.isFinite(preset) && preset > 0) {
+    tapCount = preset;
+    updateCounter();
+  }
 
   // pointerdown xử lý được cả chuột lẫn cảm ứng, khỏi lo bắn sự kiện hai lần
   overlay.addEventListener('pointerdown', handleTap);
