@@ -425,7 +425,9 @@
     /* Giấu mèo trong lúc tỏ tình, không để che mất thẻ.
        Chỉ hạ opacity — breathe vẫn chạy nhưng chỉ đụng transform nên không xung đột. */
     body.confess canvas,
-    body.confess #fallback-cat { opacity: 0; }
+    body.confess #live2dcanvas,
+    body.confess #live2d-widget,
+    body.confess #fallback-cat { opacity: 0 !important; }
 
     /* Phong thư bay lên trước khi hiện thẻ */
     .confess-intro {
@@ -573,7 +575,7 @@
     body.love #fairy-vignette { background: radial-gradient(ellipse at center, transparent 42%, rgba(190, 40, 140, .5) 100%); }
     body.love canvas,
     body.love #fallback-cat {
-      opacity: 1;
+      opacity: 1 !important;
       filter: drop-shadow(0 0 50px rgba(255,255,255,.95)) drop-shadow(0 0 90px rgba(255,80,180,1));
       /* Hiện lại → nhảy cẫng 6 nhịp → về thở bình thường */
       animation: catReturn .9s cubic-bezier(.2,1.7,.4,1) both,
@@ -1217,9 +1219,9 @@ function dodgeNo(no, yes) {
   no.style.left = `${x}px`;
   no.style.top  = `${y}px`;
 
-  // Càng né càng bé lại, chữ càng nì nèo; nút Đồng ý thì phình to
-  const shrink = Math.max(.55, 1 - noDodges * .05);
-  no.style.transform  = `scale(${shrink}) rotate(${rand(-14, 14)}deg)`;
+  // Nút Không giữ nguyên cỡ, né hoài không bao giờ biến mất;
+  // chỉ nghiêng ngẫu nhiên và đổi chữ cho vui. Nút Đồng ý thì phình to.
+  no.style.transform  = `rotate(${rand(-14, 14)}deg)`;
   no.textContent      = nextNoLabel();
   yes.style.transform = `scale(${Math.min(1.45, 1 + noDodges * .055)})`;
 
@@ -1317,6 +1319,7 @@ function acceptLove() {
   clearInterval(fairyTimers.rain);
   document.body.classList.remove('confess');
   document.body.classList.add('love');
+  setCatVisible(true);               // mèo quay lại ăn mừng
   counterEl.classList.remove('show');
 
   // Ba nhịp hiệu ứng chạy song song, không bao giờ tắt
@@ -1383,6 +1386,8 @@ function enterFairyland({ mode = 'thinh', firstLine = null } = {}) {
   spawnBurst(window.innerWidth / 2, window.innerHeight / 2, CONFIG.isSmallScreen ? 20 : 32);
 
   if (mode === 'confess') {
+    pinCatBelowUi();
+    setCatVisible(false);            // giấu mèo, không để che thẻ
     fairyTimers.rain = setInterval(spawnFairyRain, Math.round(FAIRY.rainEvery * .7));
     setTimeout(showConfessIntro, 300);
     setTimeout(showConfessCard, CONFESSION.introHold + 900);
@@ -1507,9 +1512,39 @@ function resetIdleTimer() {
   idleTimer = setTimeout(showHint, CONFIG.idleDelay);
 }
 
-/* ========================= Nạp Live2D ========================= */
+/* ========================= Con mèo ========================= */
 
 let catReady = false;
+
+/**
+ * Mọi phần tử thuộc widget mèo. Widget tự dựng DOM sau khi init nên
+ * phải hỏi lại mỗi lần, không cache được.
+ */
+function catEls() {
+  const list = [
+    document.getElementById('live2dcanvas'),
+    document.getElementById('live2d-widget'),
+    document.getElementById('fallback-cat'),
+  ];
+  document.querySelectorAll('canvas').forEach(c => list.push(c));
+  return list.filter(Boolean);
+}
+
+/**
+ * Ẩn/hiện mèo. Đặt inline kèm !important vì widget dựng canvas sau khi
+ * CSS đã tính xong — rule trong <style> không ăn.
+ */
+function setCatVisible(visible) {
+  catEls().forEach(el => {
+    el.style.setProperty('transition', 'opacity .7s ease', 'important');
+    el.style.setProperty('opacity', visible ? '1' : '0', 'important');
+  });
+}
+
+/** Ghìm mèo xuống dưới lớp chữ, nếu không nó đè lên thẻ tỏ tình. */
+function pinCatBelowUi() {
+  catEls().forEach(el => el.style.setProperty('z-index', '2', 'important'));
+}
 
 function hideLoader() {
   loader.classList.add('hidden');
@@ -1543,6 +1578,8 @@ function loadLive2D() {
         react:  { opacityDefault: 1, opacityOnHover: 1 }
       });
       catReady = true;
+      // Widget dựng canvas không đồng bộ, gọi vài nhịp cho chắc
+      [0, 400, 1200, 2500].forEach(ms => setTimeout(pinCatBelowUi, ms));
       setTimeout(hideLoader, 1200);
     } catch (err) {
       console.error('Live2D init lỗi:', err);
