@@ -76,7 +76,7 @@
       z-index: 2;
       /* Mèo thở nhè nhẹ cho có sức sống */
       animation: breathe 4.5s ease-in-out infinite;
-      transition: filter 1.2s ease;
+      transition: filter 1.2s ease, opacity .7s ease;
     }
     @keyframes breathe {
       0%, 100% { transform: translateY(0)     scale(1); }
@@ -422,7 +422,10 @@
         rgba(255, 95, 170, .95)  60%,
         rgba(205, 60, 150, .98)  100%);
     }
-    body.confess canvas { filter: drop-shadow(0 0 40px rgba(255, 60, 150, 1)); }
+    /* Giấu mèo trong lúc tỏ tình, không để che mất thẻ.
+       Chỉ hạ opacity — breathe vẫn chạy nhưng chỉ đụng transform nên không xung đột. */
+    body.confess canvas,
+    body.confess #fallback-cat { opacity: 0; }
 
     /* Phong thư bay lên trước khi hiện thẻ */
     .confess-intro {
@@ -568,9 +571,19 @@
     }
     body.love .fairy-rays { animation-duration: 11s; opacity: 1; }
     body.love #fairy-vignette { background: radial-gradient(ellipse at center, transparent 42%, rgba(190, 40, 140, .5) 100%); }
-    body.love canvas {
+    body.love canvas,
+    body.love #fallback-cat {
+      opacity: 1;
       filter: drop-shadow(0 0 50px rgba(255,255,255,.95)) drop-shadow(0 0 90px rgba(255,80,180,1));
-      animation: catCheer .5s cubic-bezier(.36,.07,.19,.97) 6, breathe 4.5s ease-in-out 3s infinite;
+      /* Hiện lại → nhảy cẫng 6 nhịp → về thở bình thường */
+      animation: catReturn .9s cubic-bezier(.2,1.7,.4,1) both,
+                 catCheer  .5s cubic-bezier(.36,.07,.19,.97) .9s 6,
+                 breathe   4.5s ease-in-out 3.9s infinite;
+    }
+    @keyframes catReturn {
+      0%   { opacity: 0; transform: scale(.15) rotate(-35deg); }
+      55%  { opacity: 1; transform: scale(1.18) rotate(8deg); }
+      100% { opacity: 1; transform: scale(1)    rotate(0deg); }
     }
     @keyframes catCheer {
       0%, 100% { transform: translateY(0)     rotate(0deg)   scale(1); }
@@ -1166,6 +1179,14 @@ function showConfessCard() {
   for (let i = 0; i < 20; i++) setTimeout(spawnRising, i * 60);
 }
 
+/** Chữ cho nút "Không": chạy hết danh sách thì quay vòng, né được mãi. */
+function nextNoLabel() {
+  const n = CONFESSION.noLabels.length;
+  if (noDodges < n) return CONFESSION.noLabels[noDodges];
+  // Vòng lại từ câu thứ 3 trở đi, khỏi lặp lại 2 câu mở đầu nhẹ nhàng
+  return CONFESSION.noLabels[2 + (noDodges - n) % (n - 2)];
+}
+
 /** Nút "Không" nhảy sang chỗ khác, nút "Đồng ý" thì to dần lên. */
 function dodgeNo(no, yes) {
   noDodges++;
@@ -1199,7 +1220,7 @@ function dodgeNo(no, yes) {
   // Càng né càng bé lại, chữ càng nì nèo; nút Đồng ý thì phình to
   const shrink = Math.max(.55, 1 - noDodges * .05);
   no.style.transform  = `scale(${shrink}) rotate(${rand(-14, 14)}deg)`;
-  no.textContent      = CONFESSION.noLabels[Math.min(noDodges, CONFESSION.noLabels.length - 1)];
+  no.textContent      = nextNoLabel();
   yes.style.transform = `scale(${Math.min(1.45, 1 + noDodges * .055)})`;
 
   // Rắc ít tim ở chỗ nó vừa bỏ chạy cho vui mắt
